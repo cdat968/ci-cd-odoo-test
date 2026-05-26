@@ -36,7 +36,7 @@ class TestQaBugTicket(TransactionCase):
 
     def test_default_severity_medium(self):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Default severity'})
-        self.assertEqual(ticket.severity, 'critical')
+        self.assertEqual(ticket.severity, 'medium')
 
     def test_default_status_new(self):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Default status'})
