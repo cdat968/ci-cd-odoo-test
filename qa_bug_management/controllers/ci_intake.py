@@ -6,7 +6,7 @@ from odoo.http import request
 
 class CiIntakeController(http.Controller):
 
-    @http.route('/qa/ci/bug', type='json', auth='none', methods=['POST'], csrf=False)
+    @http.route('/qa/ci/bug', type='http', auth='none', methods=['POST'], csrf=False)
     def ci_intake(self, **kwargs):
         # Key-based authentication
         ci_key = request.httprequest.headers.get('X-CI-Key', '')
@@ -14,7 +14,11 @@ class CiIntakeController(http.Controller):
         if not expected or ci_key != expected:
             return request.make_json_response({'error': 'Forbidden'}, status=403)
 
-        data = request.get_json_data()
+        try:
+            data = json.loads(request.httprequest.data or b'{}')
+        except (json.JSONDecodeError, ValueError):
+            return request.make_json_response({'error': 'invalid json'}, status=400)
+
         title = data.get('title', '')
         if not title:
             return request.make_json_response({'error': 'title required'}, status=400)
@@ -55,4 +59,4 @@ class CiIntakeController(http.Controller):
                 }) for e in evidence_data],
             })
 
-        return {'id': ticket.id, 'name': ticket.name}
+        return request.make_json_response({'id': ticket.id, 'name': ticket.name})

@@ -10,8 +10,10 @@ import sys, re, json
 # Also handle Python 3.11+ format where method name is appended:
 #   FAIL: test_xxx (module.Class.test_xxx)
 # And plain unittest format (no logger prefix)
-FAIL_RE = re.compile(r'FAIL: (test\w+) \(([^)]+)\)')
-ERROR_RE = re.compile(r'ERROR: (test\w+) \(([^)]+)\)')
+# Odoo 18 format: "FAIL: ClassName.test_method_name" (no parentheses)
+# Old unittest format: "FAIL: test_method (module.Class)"
+FAIL_RE = re.compile(r'FAIL: (?:\w+\.)*(test\w+)')
+ERROR_RE = re.compile(r'ERROR: (?:\w+\.)*(test\w+)')
 # Odoo 18 summary line: "X failed, Y error(s)"
 SUMMARY_RE = re.compile(r'(\d+) failed,?\s*(\d+)? ?error')
 TRACEBACK_RE = re.compile(r'Traceback \(most recent call last\):')
@@ -38,9 +40,13 @@ def parse(lines):
 
         m = FAIL_RE.search(line) or ERROR_RE.search(line)
         if m:
+            # Extract module from logger name in line if present
+            # e.g. "odoo.addons.qa_bug_management.tests.test_qa_bug_ticket: FAIL:"
+            module_match = re.search(r'(odoo\.addons\.\S+?):\s+(?:FAIL|ERROR):', line)
+            module = module_match.group(1) if module_match else 'qa_bug_management'
             failures.append({
                 'test': m.group(1),
-                'module': m.group(2),
+                'module': module,
                 'traceback': '\n'.join(current_tb[-20:]),
             })
             current_tb = []

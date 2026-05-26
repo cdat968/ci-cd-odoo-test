@@ -24,26 +24,26 @@ def main():
 
     for failure in data.get('failures', []):
         payload = {
-            'jsonrpc': '2.0', 'method': 'call', 'id': 1,
-            'params': {
-                'title': f"[CI] {failure['module']}.{failure['test']} failed",
-                'description': f"<pre>{failure.get('traceback', '')}</pre>",
-                'severity': 'high',
-                'ci_run_url': args.run_url,
-                'ci_commit_sha': args.commit,
-                'ci_branch': args.branch,
-                'report_share_url': args.report_url,
-                'evidence': [],
-            }
+            'title': f"[CI] {failure['module']}.{failure['test']} failed",
+            'description': f"<pre>{failure.get('traceback', '')}</pre>",
+            'severity': 'high',
+            'ci_run_url': args.run_url,
+            'ci_commit_sha': args.commit,
+            'ci_branch': args.branch,
+            'report_share_url': args.report_url,
+            'evidence': [],
         }
         resp = requests.post(
             f'{odoo_url}/qa/ci/bug',
             json=payload,
-            headers={'X-CI-Key': ci_key},
+            headers={
+                'X-CI-Key': ci_key,
+                'Content-Type': 'application/json',
+            },
             timeout=30,
         )
         resp.raise_for_status()
-        result = resp.json().get('result', {})
+        result = resp.json()
         print(f"Created: {result.get('name')} (id={result.get('id')})")
 
 if __name__ == '__main__':

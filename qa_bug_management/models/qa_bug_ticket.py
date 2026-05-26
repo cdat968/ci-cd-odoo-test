@@ -41,9 +41,10 @@ class QaBugTicket(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        seq = self.env.ref('qa_bug_management.seq_qa_bug_ticket', raise_if_not_found=False)
         for vals in vals_list:
             if vals.get('name', 'New') == 'New':
-                vals['name'] = self.env['ir.sequence'].next_by_code('qa.bug.ticket') or 'New'
+                vals['name'] = (seq.sudo().next_by_id() if seq else None) or 'New'
         return super().create(vals_list)
 
     def write(self, vals):
