@@ -5,8 +5,15 @@ Usage: docker compose logs odoo 2>&1 | python scripts/parse_odoo_test_log.py
 """
 import sys, re, json
 
-FAIL_RE = re.compile(r'FAIL: (test\w+) \((\S+)\)')
-ERROR_RE = re.compile(r'ERROR: (test\w+) \((\S+)\)')
+# Odoo 18 logs via Python logger — line format:
+#   odoo-1 | 2026-... ERROR db odoo.tests.result: FAIL: test_xxx (module.Class)
+# Also handle Python 3.11+ format where method name is appended:
+#   FAIL: test_xxx (module.Class.test_xxx)
+# And plain unittest format (no logger prefix)
+FAIL_RE = re.compile(r'FAIL: (test\w+) \(([^)]+)\)')
+ERROR_RE = re.compile(r'ERROR: (test\w+) \(([^)]+)\)')
+# Odoo 18 summary line: "X failed, Y error(s)"
+SUMMARY_RE = re.compile(r'(\d+) failed,?\s*(\d+)? ?error')
 TRACEBACK_RE = re.compile(r'Traceback \(most recent call last\):')
 
 def parse(lines):

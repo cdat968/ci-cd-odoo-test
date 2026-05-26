@@ -21,6 +21,9 @@ jobs:
       - name: Parse test results
         if: always()
         run: |
+          echo "=== LAST 50 LINES OF ODOO LOG ==="
+          tail -50 /tmp/odoo_test.log || true
+          echo "=== PARSE RESULT ==="
           cat /tmp/odoo_test.log | python scripts/parse_odoo_test_log.py > /tmp/failures.json || true
           cat /tmp/failures.json
 
