@@ -22,7 +22,7 @@ services:
       USER: odoo
       PASSWORD: odoo
     volumes:
-      - ./addons/qa_bug_management:/mnt/extra-addons/qa_bug_management:ro
+      - ./qa_bug_management:/mnt/extra-addons/qa_bug_management:ro
     command: >
       odoo
       --db_host=db --db_user=odoo --db_password=odoo
