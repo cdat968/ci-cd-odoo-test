@@ -1,14 +1,14 @@
 interface ReportViewerProps {
-  html: string;
+  url: string;
   title: string;
 }
 
-export default function ReportViewer({ html, title }: ReportViewerProps) {
+export default function ReportViewer({ url, title }: ReportViewerProps) {
   return (
     <>
       <title>{title}</title>
       <iframe
-        srcDoc={html}
+        src={url}
         title={title}
         style={{ width: '100%', height: '100vh', border: 'none' }}
       />
