@@ -1,5 +1,3 @@
-'use client';
-
 interface ReportViewerProps {
   html: string;
   title: string;
