@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TechNext Landing Page Bug Report - BUG-1 and BUG-2</title>
+    <style>
+      :root {
+        --ink: #172033;
+        --muted: #5f6b7a;
+        --line: #d8e0eb;
+        --paper: #fff;
+        --bg: #f5f7fb;
+        --navy: #173b63;
+        --green: #15803d;
+        --red: #b91c1c;
+        --orange: #c2410c;
+        --blue: #2454d6;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.5;
+      }
+      .page { max-width: 1280px; margin: 0 auto; padding: 28px 20px 56px; }
+      .hero {
+        background: var(--navy);
+        color: white;
+        padding: 30px;
+        border-radius: 8px;
+        border: 1px solid #0f2d4f;
+      }
+      .hero h1 { margin: 0 0 10px; font-size: 32px; line-height: 1.15; letter-spacing: 0; }
+      .hero p { margin: 0; color: #dce9f8; max-width: 960px; }
+      .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+      .kpi { background: white; color: var(--ink); border-radius: 8px; padding: 14px; border: 1px solid var(--line); }
+      .kpi strong { display: block; font-size: 28px; line-height: 1; }
+      .kpi span { color: var(--muted); font-size: 13px; }
+      nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+      nav a { color: #dce9f8; text-decoration: none; border: 1px solid rgba(255,255,255,.35); padding: 7px 10px; border-radius: 8px; font-size: 13px; }
+      section { margin-top: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+      .section-head { padding: 18px 20px; border-bottom: 1px solid var(--line); background: #fbfcfe; }
+      .section-head h2 { margin: 0; font-size: 20px; letter-spacing: 0; }
+      .section-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+      .section-body { padding: 18px 20px 22px; }
+      .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+      table { width: 100%; border-collapse: collapse; min-width: 1180px; background: white; }
+      th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; font-size: 13px; }
+      th { background: #eef3f8; color: #344054; text-transform: uppercase; font-size: 12px; letter-spacing: .03em; }
+      tbody tr:nth-child(even) td { background: #eef6ff; }
+      tbody tr:nth-child(odd) td { background: #fff; }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 8px;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: 800;
+        border: 1px solid var(--line);
+        background: #f8fafc;
+        color: #334155;
+        white-space: nowrap;
+      }
+      .bug, .open { background: #fff1f2; color: var(--red); border-color: #fecdd3; }
+      .status { background: #f0fdf4; color: var(--green); border-color: #bbf7d0; }
+      .priority, .option { background: #fff7ed; color: var(--orange); border-color: #fed7aa; }
+      .feature-badge { background: #ecfeff; color: #0e7490; border-color: #67e8f9; }
+      .summary-cell { color: green; font-weight: 900; font-size: 15px; }
+      .optional-col { display: none; }
+      body.show-optional .optional-col { display: table-cell; }
+      .toggle-optional, .filter-button, .ticket-view-button, .ticket-button {
+        border: 1px solid #d8dee8;
+        background: white;
+        border-radius: 8px;
+        padding: 8px 11px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      .toggle-optional { margin-bottom: 12px; }
+      .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 14px; }
+      .filter-field { display: grid; gap: 5px; min-width: 175px; }
+      .filter-field label { font-size: 12px; font-weight: 900; color: #475569; }
+      .filter-field select {
+        height: 36px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: white;
+        color: #172033;
+        padding: 0 10px;
+        font-weight: 800;
+      }
+      .filter-button { background: var(--blue); border-color: var(--blue); color: white; }
+      .filter-button.reset { background: white; color: #172033; border-color: #cbd5e1; }
+      .ticket-view-button {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(37,84,214,.18);
+      }
+      .ticket-view-button:hover, .filter-button:hover { background: #1d4ed8; }
+      .filter-button.reset:hover, .toggle-optional:hover { background: #eaf3ff; }
+      .modal-backdrop, .evidence-viewer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(15, 23, 42, .7);
+        padding: 42px;
+        overflow: auto;
+      }
+      .modal-backdrop.show, .evidence-viewer.show { display: block; }
+      .ticket-modal {
+        max-width: 1240px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        box-shadow: 0 28px 70px rgba(15, 23, 42, .35);
+        overflow: hidden;
+      }
+      .ticket-modal-header {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      .ticket-modal-title { margin: 0; font-size: 24px; line-height: 1.2; }
+      .ticket-modal-subtitle { margin-top: 8px; color: #667085; font-weight: 700; }
+      .ticket-modal-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      .ticket-button { background: var(--blue); border-color: var(--blue); color: #fff; white-space: nowrap; }
+      .ticket-button.secondary { background: white; color: #172033; border-color: #d8dee8; }
+      .export-md-button { border-color: #7c3aed !important; background: #f5f3ff !important; color: #5b21b6 !important; }
+      .ticket-modal-body { padding: 20px 22px 24px; }
+      .ticket-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+      .ticket-field { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fbfcfe; min-height: 70px; }
+      .ticket-field.wide { grid-column: span 2; }
+      .ticket-field.full { grid-column: 1 / -1; }
+      .ticket-field.summary-main { grid-column: span 2; }
+      .ticket-label { display: block; margin-bottom: 4px; color: #667085; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .03em; }
+      .ticket-value { font-size: 14px; color: #172033; }
+      .ticket-field[data-ticket-label="Summary"] .ticket-value { color: #15803d; font-size: 18px; font-weight: 900; line-height: 1.35; }
+      .ticket-field[data-ticket-label="Expected Result"] { border-color: #86efac; background: #f0fdf4; }
+      .ticket-field[data-ticket-label="Expected Result"] .ticket-label,
+      .ticket-field[data-ticket-label="Expected Result"] .ticket-value { color: #15803d; }
+      .ticket-field[data-ticket-label="Observed Result"] { border-color: #fecaca; background: #fff7f7; }
+      .ticket-field[data-ticket-label="Observed Result"] .ticket-label,
+      .ticket-field[data-ticket-label="Observed Result"] .ticket-value { color: #b91c1c; }
+      .steps { margin: 0; padding-left: 0; list-style: none; }
+      .steps li { padding: 3px 0; }
+      .step-code { font-weight: 900; color: #dc2626; margin-right: 6px; }
+      .ticket-edit-control {
+        width: 100%;
+        min-height: 92px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 10px;
+        font: inherit;
+        color: #111827;
+        resize: vertical;
+      }
+      .ticket-save-row { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+      .ticket-save-button { border: 1px solid #16a34a; background: #16a34a; color: white; border-radius: 8px; padding: 8px 14px; font-weight: 900; cursor: pointer; }
+      .ticket-save-state { color: #15803d; font-weight: 900; }
+      .resolution-picker { position: relative; }
+      .resolution-picker-button {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #fff;
+        color: #111827;
+        padding: 8px 10px;
+        font: inherit;
+        cursor: pointer;
+      }
+      .resolution-picker-button::after { content: "v"; color: #475569; }
+      .resolution-picker-list {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 10000;
+        margin: 0;
+        padding: 4px;
+        list-style: none;
+        border: 1px solid #111827;
+        border-radius: 8px;
+        background: #f8fafc;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, .22);
+      }
+      .resolution-picker.open .resolution-picker-list { display: block; }
+      .resolution-option { position: relative; padding: 8px 10px; border-radius: 6px; color: #111827; cursor: pointer; }
+      .resolution-option:hover, .resolution-option.active { background: #dcfce7; color: #15803d; font-weight: 900; }
+      .resolution-tooltip {
+        display: none;
+        position: absolute;
+        left: calc(100% + 8px);
+        top: 0;
+        min-width: 230px;
+        max-width: 320px;
+        padding: 8px 10px;
+        border: 1px solid #111827;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #111827;
+        font-size: 12px;
+        line-height: 1.35;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, .2);
+      }
+      .resolution-option:hover .resolution-tooltip { display: block; }
+      .evidence-section { margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+      .evidence-section h3 { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); background: #fbfcfe; }
+      .evidence-grid { padding: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+      .evidence-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        cursor: pointer;
+      }
+      .evidence-card:hover { border-color: #2454d6; box-shadow: 0 8px 18px rgba(15, 23, 42, .12); }
+      .evidence-caption {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 900;
+        color: #172033;
+        min-height: 48px;
+      }
+      .evidence-image-shot { line-height: 0; background: #e2e8f0; }
+      .evidence-image-shot img {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: 260px;
+        object-fit: contain;
+        object-position: top left;
+        background: #fff;
+      }
+      .empty-note { grid-column: 1 / -1; padding: 14px; border: 1px dashed #cbd5e1; border-radius: 8px; color: #667085; background: #f8fafc; }
+      .evidence-viewer-panel { max-width: 1200px; margin: 0 auto; }
+      .evidence-viewer-panel .ticket-modal-header,
+      .evidence-viewer-panel .ticket-modal-body {
+        background: #fff;
+      }
+      .evidence-viewer-panel .ticket-modal-header {
+        border-radius: 10px 10px 0 0;
+        border: 1px solid var(--line);
+        border-bottom: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 12px;
+      }
+      .evidence-viewer-panel .ticket-modal-body {
+        border: 1px solid var(--line);
+        border-top: 0;
+        border-radius: 0 0 10px 10px;
+      }
+      .evidence-viewer-canvas {
+        min-height: calc(100vh - 190px);
+        background: #fff;
+        border-radius: 8px;
+        overflow: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 18px;
+      }
+      .evidence-viewer-canvas img {
+        display: block;
+        max-width: 100%;
+        max-height: calc(100vh - 230px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        transform-origin: top center;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+      }
+      #evidenceViewerTitle {
+        font-size: 18px;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+        word-break: normal;
+      }
+      #evidenceViewer .ticket-modal-actions {
+        flex-wrap: nowrap;
+        align-items: center;
+      }
+      #evidenceViewer .ticket-button {
+        padding: 7px 10px;
+        white-space: nowrap;
+      }
+      @media (max-width: 900px) {
+        .page { padding: 14px 10px 34px; }
+        .kpis, .ticket-grid, .evidence-grid { grid-template-columns: 1fr; }
+        .ticket-field.wide, .ticket-field.summary-main { grid-column: 1; }
+        .hero h1 { font-size: 26px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <h1>TechNext Landing Page Bug Report</h1>
+        <div class="kpis">
+          <div class="kpi"><strong>6</strong><span>Total Bugs</span></div>
+          <div class="kpi"><strong>6</strong><span>Open Bugs</span></div>
+          <div class="kpi"><strong>0</strong><span>High Priority</span></div>
+          <div class="kpi"><strong>25/05/2026</strong><span>Report Date</span></div>
+        </div>
+        <nav><a href="#bug">Bug Report</a></nav>
+      </header>
+
+      <section id="bug" data-report-section="bug-report">
+        <div class="section-head">
+          <h2>Bug Report Table</h2>
+        </div>
+        <div class="section-body">
+          <div class="filter-bar" id="bugFilterBar">
+            <div class="filter-field">
+              <label for="bugFeatureFilter">Feature</label>
+              <select id="bugFeatureFilter">
+                <option value="">All</option>
+                <option value="Lead Form Validation">Lead Form Validation</option>
+                <option value="Header Navigation">Header Navigation</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="bugPriorityFilter">Priority</label>
+              <select id="bugPriorityFilter">
+                <option value="">All</option>
+                <option value="P2 - High">P2 - High</option>
+                <option value="P3 - Medium">P3 - Medium</option>
+                <option value="P4 - Low">P4 - Low</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="bugStatusFilter">Status</label>
+              <select id="bugStatusFilter">
+                <option value="">All</option>
+                <option value="New">New</option>
+                <option value="Fixed">Fixed</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="bugDateFilter">Bug Date</label>
+              <select id="bugDateFilter">
+                <option value="">All</option>
+                <option value="today">Today</option>
+                <option value="last3">3 days ago</option>
+                <option value="last7">One week ago</option>
+              </select>
+            </div>
+            <button type="button" class="filter-button" id="applyBugFilter">Filter</button>
+            <button type="button" class="filter-button reset" id="resetBugFilter">Reset</button>
+          </div>
+
+          <button class="toggle-optional" type="button" id="toggleOptional">Show all bug fields</button>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Summary</th>
+                  <th>Steps to Reproduce</th>
+                  <th>Priority</th>
+                  <th>Feature</th>
+                  <th class="optional-col">Build found</th>
+                  <th class="optional-col">Reproducibility</th>
+                  <th class="optional-col">Severity</th>
+                  <th class="optional-col">Frequency</th>
+                  <th class="optional-col">Keyword</th>
+                  <th class="optional-col">Status</th>
+                  <th class="optional-col">Resolution</th>
+                  <th class="optional-col">Note</th>
+                  <th class="optional-col">Suggested Fix</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody data-report-table="bug-report" id="bugTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" id="ticketModal" aria-hidden="true">
+      <div class="ticket-modal" role="dialog" aria-modal="true">
+        <div class="ticket-modal-header">
+          <div>
+            <h2 class="ticket-modal-title" id="modalTitle"></h2>
+            <div class="ticket-modal-subtitle" id="modalSubtitle"></div>
+          </div>
+          <div class="ticket-modal-actions">
+            <button type="button" class="ticket-button" id="exportTicketExcel">Export Excel</button>
+            <button type="button" class="ticket-button secondary" id="closeModal">Close</button>
+          </div>
+        </div>
+        <div class="ticket-modal-body">
+          <div class="ticket-grid" id="ticketFields"></div>
+          <div class="evidence-section">
+            <h3>Step Evidence</h3>
+            <div class="evidence-grid" id="evidenceGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="evidence-viewer" id="evidenceViewer" aria-hidden="true">
+      <div class="evidence-viewer-panel">
+        <div class="ticket-modal-header">
+          <h2 class="ticket-modal-title" id="evidenceViewerTitle">Step Evidence</h2>
+          <div class="ticket-modal-actions">
+            <button type="button" class="ticket-button secondary" id="prevEvidenceImage">&lt;</button>
+            <button type="button" class="ticket-button secondary" id="nextEvidenceImage">&gt;</button>
+            <button type="button" class="ticket-button secondary" id="zoomOutEvidence">Zoom out</button>
+            <button type="button" class="ticket-button secondary" id="resetEvidenceZoom">Reset</button>
+            <button type="button" class="ticket-button secondary" id="zoomInEvidence">Zoom in</button>
+            <button type="button" class="ticket-button secondary" id="closeEvidenceViewer">Close</button>
+          </div>
+        </div>
+        <div class="ticket-modal-body">
+          <div class="evidence-viewer-canvas" id="evidenceViewerCanvas"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const reportToday = "2026-05-25";
+      const bugTickets = {
+        "BUG-1": {
+          id: "BUG-1",
+          summary: "Header tabs are covered by page content when the header reappears after scrolling up.",
+          description: "When the user scrolls down, the header is temporarily hidden as expected. However, when the user scrolls up slightly and the header reappears, some page content is displayed above the header layer and covers the header tab labels or navigation items. This makes the header look visually broken and can make the navigation tabs difficult to read or click. The issue is likely related to CSS layering, such as incorrect z-index, position, sticky header behavior, or an unexpected stacking context.",
+          steps: [
+            "Access the TechNext website (https://technextasia.com/).",
+            "Scroll down the page until the header is temporarily hidden.",
+            "Scroll up slightly by one small step so that the header appears again.",
+            "Observe the header/navigation bar and check whether page content overlaps or covers the header tab labels."
+          ],
+          expected: "When the header reappears after scrolling up, it should be displayed above all page content. Header tabs and navigation labels should remain fully visible, readable, and clickable.",
+          observed: "After scrolling up slightly and the header reappears, page content overlaps the header area and covers some header tab labels or navigation items.",
+          build: "GitHub Pages build - observed on 2026-05-22",
+          reproducibility: "Always",
+          severity: "S3 - Minor",
+          frequency: "Everytime",
+          priority: "P4 - Low",
+          keyword: "Header / Navigation Bar / Scroll Up / Sticky Header / Z-index / CSS Layering / UI",
+          status: "New",
+          resolution: "n/a",
+          note: "",
+          suggestedFix: "Update the header styling so the header uses a distinct background color that clearly separates it from the page background. Also ensure the header has a higher z-index than all page sections and overlapping content when it reappears after scrolling. Review any parent stacking contexts created by position, transform, opacity, filter, or backdrop-filter that may prevent the header z-index from taking effect.",
+          feature: "Header Navigation",
+          createdAt: "2026-05-22",
+          evidence: [
+            { src: "assets/evidence/landing_page_vercel/bug_10/bug10_1.png", title: "B1: Access the TechNext website (https://technextasia.com/)." },
+            { src: "assets/evidence/landing_page_vercel/bug_10/bug10_2.png", title: "B2: Scroll down the page until the header is temporarily hidden." },
+            { src: "assets/evidence/landing_page_vercel/bug_10/bug10_3.png", title: "B3: Scroll up slightly by one small step so that the header appears again." },
+            { src: "assets/evidence/landing_page_vercel/bug_10/bug10_4.png", title: "B4: Observe whether page content overlaps or covers the header tab labels." }
+          ]
+        },
+        "BUG-2": {
+          id: "BUG-2",
+          summary: "Booking form allows confirmation when the Phone/WhatsApp field contains alphabetic characters.",
+          description: "The booking form does not validate the Phone/WhatsApp field as a valid phone number. A user can enter alphabetic characters, continue to select a booking date and time, and confirm the booking. This can create invalid booking data and make it difficult for the team to contact the customer.",
+          steps: [
+            "Go to https://technextasia.com/.",
+            "Click the Book Now button.",
+            "Select any option, for example AI Automation and Agent.",
+            "Fill in valid input for all required fields except the Phone/WhatsApp field.",
+            "Enter alphabetic characters in the Phone/WhatsApp field, for example abcd.",
+            "Click Continue.",
+            "Select a booking date and time, for example 4:00 PM.",
+            "Click Confirm Booking."
+          ],
+          expected: "The system should not allow the user to continue or confirm the booking when the Phone/WhatsApp field contains alphabetic characters. A clear validation message should be displayed, for example: \"Please enter a valid phone number.\"",
+          observed: "The user can continue the booking flow and submit the booking even though the Phone/WhatsApp field contains alphabetic characters.",
+          build: "Production website / current web build",
+          reproducibility: "Always",
+          severity: "S2 - Major",
+          frequency: "Everytime",
+          priority: "P3 - Medium",
+          keyword: "Website Booking / Phone-WhatsApp Validation",
+          status: "New",
+          resolution: "n/a",
+          note: "",
+          suggestedFix: "Validate the Phone/WhatsApp field as a valid phone number on both frontend and backend/API. For example, require exactly 10 digits, reject alphabetic characters and special characters, and block Continue/Confirm Booking until the value is valid.",
+          feature: "Lead Form Validation",
+          createdAt: "2026-05-22",
+          evidence: [
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_1.png", title: "B1: Go to https://technextasia.com/." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_2.png", title: "B2: Click the Book Now button." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_3.png", title: "B3: Select any option, for example AI Automation and Agent." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_4.png", title: "B4: Fill in valid input for all required fields except the Phone/WhatsApp field." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_5.png", title: "B5: Enter alphabetic characters in the Phone/WhatsApp field, for example abcd." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_6.png", title: "B6: Click Continue." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_7.png", title: "B7: Select a booking date and time, for example 4:00 PM." },
+            { src: "assets/evidence/landing_page_vercel/bug12/b12_8.png", title: "B8: Click Confirm Booking." }
+          ]
+        },
+        "BUG-3": {
+          id: "BUG-3",
+          summary: "Blog page is not fully localized after selecting the Vietnamese language option.",
+          description: "After switching the website language to Vietnamese, some content in the Blog tab still appears in English. This creates an inconsistent localization experience because users expect all visible content to be translated into Vietnamese after selecting the VN language option.",
+          steps: [
+            "Access the TechNext website (technextasia.com).",
+            "Click the Blog tab on the header navigation bar.",
+            "Select the Vietnamese language option (VN).",
+            "Observe the Blog page content and check whether all visible text is displayed in Vietnamese."
+          ],
+          expected: "After selecting Vietnamese (VN), all visible content in the Blog tab should be displayed in Vietnamese, including headings, labels, buttons, descriptions, article cards, categories, empty states, and CTA text.",
+          observed: "Some content in the Blog tab still appears in English even after the Vietnamese language option is selected.",
+          build: "GitHub Pages build - observed on 2026-05-22",
+          reproducibility: "Always",
+          severity: "S3 - Minor",
+          frequency: "Everytime",
+          priority: "P4 - Low",
+          keyword: "Blog / Vietnamese localization / VN language / Translation mapping",
+          status: "New",
+          resolution: "n/a",
+          note: "",
+          suggestedFix: "Localize the remaining English metadata in the Blog page after selecting Vietnamese (VN). For example, convert the date format from \"May 2, 2026\" to \"02/05/2026\" and translate \"6 min read\" to \"6 phút đọc\".",
+          feature: "Blog Localization",
+          createdAt: "2026-05-22",
+          evidence: [
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_1.png", title: "B1: Access the TechNext website (technextasia.com)." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_2.png", title: "B2: Click the Blog tab on the header navigation bar." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_3.png", title: "B3: Select the Vietnamese language option (VN)." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_4_1.png", title: "B4.1: Observe the Blog page content and check whether all visible text is displayed in Vietnamese." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_4_2.png", title: "B4.2: Observe the Blog page content and check whether all visible text is displayed in Vietnamese." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_4_3.png", title: "B4.3: Observe the Blog page content and check whether all visible text is displayed in Vietnamese." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_4_4.png", title: "B4.4: Observe the Blog page content and check whether all visible text is displayed in Vietnamese." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_4_5.png", title: "B4.5: Observe the Blog page content and check whether all visible text is displayed in Vietnamese." },
+            { src: "assets/evidence/landing_page_vercel/bug13/b13_4_6.png", title: "B4.6: Observe the Blog page content and check whether all visible text is displayed in Vietnamese." }
+          ]
+        },
+        "BUG-4": {
+          id: "BUG-4",
+          summary: "Got Questions section shows incorrect remote-friendly information for Vietnam-based work.",
+          description: "In the Got Questions section, the answer for \"Do I need to be based in Vietnam?\" says that the Vietnam Dev Hub is remote-friendly and that users can work from anywhere in Vietnam. This content is inaccurate because Vietnam-based roles are office-based at the Vietnam office. The current wording may mislead candidates about the actual working arrangement.",
+          steps: [
+            "Access the TechNext website (technextasia.com).",
+            "Scroll down to the Got Questions section.",
+            "Find the question: \"Do I need to be based in Vietnam?\"",
+            "Observe the answer: \"Our Vietnam Dev Hub is remote-friendly — you can work from anywhere in Vietnam. We don't require you to be in a specific city. All you need is a solid internet connection and a passion for building real AI systems.\""
+          ],
+          expected: "The answer should accurately explain that Vietnam-based roles work on-site at the Vietnam office.",
+          observed: "The answer says the Vietnam Dev Hub is remote-friendly and that users can work from anywhere in Vietnam.",
+          build: "Production website / current web build",
+          reproducibility: "Always",
+          severity: "S3 - Minor",
+          frequency: "Everytime",
+          priority: "P4 - Low",
+          keyword: "Got Questions / Careers / Vietnam Work Arrangement / Remote-Friendly Content",
+          status: "New",
+          resolution: "n/a",
+          note: "",
+          suggestedFix: "Our Vietnam team works on-site at our Vietnam office to support close collaboration and fast communication.",
+          feature: "Careers Content",
+          createdAt: "2026-05-22",
+          evidence: [
+            { src: "assets/evidence/landing_page_vercel/bug14/b14_1.png", title: "B1: Access the TechNext website (technextasia.com)." },
+            { src: "assets/evidence/landing_page_vercel/bug14/b14_2.png", title: "B2: Scroll down to the Got Questions section." },
+            { src: "assets/evidence/landing_page_vercel/bug14/b14_3.png", title: "B3: Find the question: \"Do I need to be based in Vietnam?\"" },
+            { src: "assets/evidence/landing_page_vercel/bug14/b14_4.png", title: "B4: Observe the remote-friendly answer for Vietnam-based work." }
+          ]
+        },
+        "BUG-5": {
+          id: "BUG-5",
+          summary: "Got Questions answer includes unnecessary paid challenge detail in the interview process.",
+          description: "In the Got Questions section, the answer for \"What's the interview process like?\" includes the phrase \"paid for senior roles\" in the take-home technical challenge description. This detail is not part of the interview process and may make the public FAQ answer less accurate.",
+          steps: [
+            "Access the TechNext website (technextasia.com).",
+            "Scroll down to the Got Questions section.",
+            "Find the question: \"What's the interview process like?\"",
+            "Observe the answer: \"Our process is fast and practical: a 30-min intro call, a take-home technical challenge (paid for senior roles), and a final conversation with the team lead. We aim to give feedback within 5 business days at each stage.\""
+          ],
+          expected: "The interview process answer should not include the phrase \"paid for senior roles\" because this is not part of the interview process. The answer should describe only the actual interview stages.",
+          observed: "The answer includes \"paid for senior roles\" in the interview process description.",
+          build: "Production website / current web build",
+          reproducibility: "Always",
+          severity: "S3 - Minor",
+          frequency: "Everytime",
+          priority: "P4 - Low",
+          keyword: "Got Questions / Careers / Interview Process / FAQ Content",
+          status: "New",
+          resolution: "n/a",
+          note: "",
+          suggestedFix: "Remove the phrase \"paid for senior roles\" from the answer. Suggested wording: \"Our process is fast and practical: a 30-min intro call, a take-home technical challenge, and a final conversation with the team lead. We aim to give feedback within 5 business days at each stage.\"",
+          feature: "Careers Content",
+          createdAt: "2026-05-22",
+          evidence: [
+            { src: "assets/evidence/landing_page_vercel/bug15/b15_1.png", title: "B1: Access the TechNext website (technextasia.com)." },
+            { src: "assets/evidence/landing_page_vercel/bug15/b15_2.png", title: "B2: Scroll down to the Got Questions section." },
+            { src: "assets/evidence/landing_page_vercel/bug15/b15_3.png", title: "B3: Find the question: \"What's the interview process like?\"" },
+            { src: "assets/evidence/landing_page_vercel/bug15/b15_4.png", title: "B4: Observe the interview process answer." }
+          ]
+        },
+        "BUG-6": {
+          id: "BUG-6",
+          summary: "Got Questions answer lists technologies that should not be shown in the TechNext technology stack.",
+          description: "In the Got Questions section, the answer for \"What technologies does TechNext use?\" lists many technologies, including LangChain, CrewAI, GPT-4, Llama, Mistral, Qdrant/Chroma/Pinecone, n8n, Docker/Kubernetes, and vLLM. The displayed technology list is not aligned with the intended public content. The answer should only keep Python, Claude (Anthropic), and Odoo for ERP.",
+          steps: [
+            "Access the TechNext website (technextasia.com).",
+            "Scroll down to the Got Questions section.",
+            "Find the question: \"What technologies does TechNext use?\"",
+            "Observe the answer: \"Our stack includes Python, LangChain, CrewAI, Claude (Anthropic), GPT-4, Llama, Mistral, Qdrant/Chroma/Pinecone for vector storage, n8n for automation, Odoo for ERP, Docker/Kubernetes for infra, and vLLM for local model serving.\""
+          ],
+          expected: "The answer should only show the technologies intended for public display.",
+          observed: "The answer shows extra technologies that should be removed from the public FAQ content.",
+          build: "Production website / current web build",
+          reproducibility: "Always",
+          severity: "S3 - Minor",
+          frequency: "Everytime",
+          priority: "P4 - Low",
+          keyword: "Got Questions / Careers / Technology Stack / FAQ Content",
+          status: "New",
+          resolution: "n/a",
+          note: "",
+          suggestedFix: "Keep only Python, Claude (Anthropic), and Odoo for ERP in the answer. Suggested wording: \"Our stack includes Python, Claude (Anthropic), and Odoo for ERP.\"",
+          feature: "Careers Content",
+          createdAt: "2026-05-22",
+          evidence: [
+            { src: "assets/evidence/landing_page_vercel/bug16/b16_1.png", title: "B1: Access the TechNext website (technextasia.com)." },
+            { src: "assets/evidence/landing_page_vercel/bug16/b16_2.png", title: "B2: Scroll down to the Got Questions section." },
+            { src: "assets/evidence/landing_page_vercel/bug16/b16_3.png", title: "B3: Find the question: \"What technologies does TechNext use?\"" },
+            { src: "assets/evidence/landing_page_vercel/bug16/b16_4.png", title: "B4: Observe the technology stack answer." }
+          ]
+        }
+      };
+
+      const resolutionOptions = [
+        { value: "n/a", label: "n/a", description: "No resolution has been selected yet." },
+        { value: "Fixed", label: "Fixed", description: "The defect has been fixed and is ready for retest or closure." },
+        { value: "Won't Fix", label: "Won't Fix", description: "The team intentionally will not fix this issue." },
+        { value: "Duplicate", label: "Duplicate", description: "The issue is already tracked by another ticket." },
+        { value: "Cannot Reproduce", label: "Cannot Reproduce", description: "The issue cannot be reproduced with the provided steps or environment." },
+        { value: "Not a Bug", label: "Not a Bug", description: "The observed behavior is expected or outside the defect scope." },
+        { value: "Deferred", label: "Deferred", description: "The issue is accepted but postponed to a later release." }
+      ];
+
+      const storage = {
+        key: id => "landing-page-bug-report:" + id,
+        load(id) {
+          try { return JSON.parse(localStorage.getItem(this.key(id)) || "{}"); } catch (_) { return {}; }
+        },
+        save(id, data) { localStorage.setItem(this.key(id), JSON.stringify(data)); }
+      };
+
+      const bugTableBody = document.getElementById("bugTableBody");
+      const modal = document.getElementById("ticketModal");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalSubtitle = document.getElementById("modalSubtitle");
+      const fields = document.getElementById("ticketFields");
+      const evidenceGrid = document.getElementById("evidenceGrid");
+      const closeModal = document.getElementById("closeModal");
+      const exportExcel = document.getElementById("exportTicketExcel");
+      const evidenceViewer = document.getElementById("evidenceViewer");
+      const evidenceViewerTitle = document.getElementById("evidenceViewerTitle");
+      const evidenceViewerCanvas = document.getElementById("evidenceViewerCanvas");
+      const closeEvidenceViewer = document.getElementById("closeEvidenceViewer");
+      const prevEvidenceImage = document.getElementById("prevEvidenceImage");
+      const nextEvidenceImage = document.getElementById("nextEvidenceImage");
+      const zoomInEvidence = document.getElementById("zoomInEvidence");
+      const zoomOutEvidence = document.getElementById("zoomOutEvidence");
+      const resetEvidenceZoom = document.getElementById("resetEvidenceZoom");
+      let activeTicket = null;
+      let activeEvidence = [];
+      let currentEvidenceIndex = 0;
+      let evidenceZoom = 1;
+
+      function escHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+      }
+      function stripHtml(value) {
+        const div = document.createElement("div");
+        div.innerHTML = String(value || "");
+        return div.textContent || div.innerText || "";
+      }
+      function savedTicket(id) {
+        const ticket = { ...bugTickets[id] };
+        const saved = storage.load(id);
+        return { ...ticket, ...saved };
+      }
+      function dateValue(ticket) { return ticket.createdAt || ""; }
+      function dayDiff(dateText) {
+        if (!dateText) return Number.POSITIVE_INFINITY;
+        const base = new Date(reportToday + "T00:00:00");
+        const target = new Date(dateText + "T00:00:00");
+        return Math.floor((base - target) / 86400000);
+      }
+      function isInDateRange(ticket, range) {
+        if (!range) return true;
+        const diff = dayDiff(dateValue(ticket));
+        if (range === "today") return diff === 0;
+        if (range === "last3") return diff >= 0 && diff <= 3;
+        if (range === "last7") return diff >= 0 && diff <= 7;
+        return true;
+      }
+      function optionByValue(value) {
+        return resolutionOptions.find(option => option.value === value) || resolutionOptions[0];
+      }
+      function resolutionPicker(value) {
+        const normalized = optionByValue(value || "n/a").value;
+        const items = resolutionOptions.map(option => {
+          return `<li class="resolution-option${option.value === normalized ? " active" : ""}" data-resolution-value="${escHtml(option.value)}">${escHtml(option.label)}<span class="resolution-tooltip">${escHtml(option.description)}</span></li>`;
+        }).join("");
+        return `<div class="resolution-picker" data-selected-resolution="${escHtml(normalized)}"><button type="button" class="resolution-picker-button">${escHtml(optionByValue(normalized).label)}</button><ul class="resolution-picker-list">${items}</ul></div>`;
+      }
+      function statusBadge(value) {
+        return `<span class="badge ${value === "Fixed" ? "status" : "open"}">${escHtml(value)}</span>`;
+      }
+      function priorityBadge(value) {
+        return `<span class="badge priority">${escHtml(value)}</span>`;
+      }
+      function stepLines(ticket) {
+        return ticket.steps.map((step, index) => `B${index + 1}: ${escHtml(step)}`).join("<br>");
+      }
+      function stepList(ticket) {
+        return `<ul class="steps">${ticket.steps.map((step, index) => `<li><span class="step-code">B${index + 1}:</span>${escHtml(step)}</li>`).join("")}</ul>`;
+      }
+      function fullSteps(ticket) {
+        return `${stepLines(ticket)}<br><strong>Expected Result:</strong> ${escHtml(ticket.expected)}<br><strong>Observed Result:</strong> ${escHtml(ticket.observed)}`;
+      }
+      function ticketField(label, value, cls = "") {
+        return `<div class="ticket-field ${cls}" data-ticket-label="${escHtml(label)}"><span class="ticket-label">${escHtml(label)}</span><div class="ticket-value">${value}</div></div>`;
+      }
+      function sortedTickets() {
+        const idRank = { "BUG-1": 1, "BUG-2": 2, "BUG-3": 3, "BUG-4": 4, "BUG-5": 5, "BUG-6": 6 };
+        return Object.keys(bugTickets)
+          .map(id => savedTicket(id))
+          .sort((a, b) => (idRank[a.id] || 99) - (idRank[b.id] || 99) || a.id.localeCompare(b.id));
+      }
+      function renderRows() {
+        bugTableBody.innerHTML = sortedTickets().map(ticket => {
+          return `<tr class="ticket-row${ticket.status === "New" ? " open" : ""}" data-bug-id="${escHtml(ticket.id)}" data-feature="${escHtml(ticket.feature)}">
+            <td><span class="badge bug">${escHtml(ticket.id)}</span></td>
+            <td class="summary-cell">${escHtml(ticket.summary)}</td>
+            <td>${fullSteps(ticket)}</td>
+            <td>${priorityBadge(ticket.priority)}</td>
+            <td><span class="badge feature-badge">${escHtml(ticket.feature)}</span></td>
+            <td class="optional-col">${escHtml(ticket.build)}</td>
+            <td class="optional-col"><span class="badge option">${escHtml(ticket.reproducibility)}</span></td>
+            <td class="optional-col"><span class="badge option">${escHtml(ticket.severity)}</span></td>
+            <td class="optional-col"><span class="badge option">${escHtml(ticket.frequency)}</span></td>
+            <td class="optional-col">${escHtml(ticket.keyword)}</td>
+            <td class="optional-col">${statusBadge(ticket.status)}</td>
+            <td class="optional-col"><span class="badge option">${escHtml(ticket.resolution)}</span></td>
+            <td class="optional-col">${escHtml(ticket.note)}</td>
+            <td class="optional-col">${escHtml(ticket.suggestedFix || "")}</td>
+            <td><button type="button" class="ticket-view-button" data-view-ticket="${escHtml(ticket.id)}">View</button></td>
+          </tr>`;
+        }).join("");
+      }
+      function applyFilters() {
+        const feature = document.getElementById("bugFeatureFilter").value;
+        const priority = document.getElementById("bugPriorityFilter").value;
+        const status = document.getElementById("bugStatusFilter").value;
+        const dateRange = document.getElementById("bugDateFilter").value;
+        document.querySelectorAll("#bugTableBody tr").forEach(row => {
+          const ticket = savedTicket(row.dataset.bugId);
+          const visible = (!feature || ticket.feature === feature) &&
+            (!priority || ticket.priority === priority) &&
+            (!status || ticket.status === status) &&
+            isInDateRange(ticket, dateRange);
+          row.style.display = visible ? "" : "none";
+        });
+      }
+      function renderEvidence(ticket) {
+        if (!ticket.evidence || !ticket.evidence.length) {
+          return '<div class="empty-note">No evidence images have been attached yet.</div>';
+        }
+        return ticket.evidence.map((item, index) => {
+          return `<article class="evidence-card" data-evidence-index="${index}" title="Click to view full size"><div class="evidence-caption">${escHtml(item.title || "Step Evidence")}</div><div class="evidence-image-shot"><img src="${escHtml(item.src)}" alt="${escHtml(item.title || "Evidence")}" /></div></article>`;
+        }).join("");
+      }
+      function openTicket(id) {
+        const ticket = savedTicket(id);
+        activeTicket = ticket;
+        activeEvidence = ticket.evidence || [];
+        modalTitle.innerHTML = `<span class="badge bug">${escHtml(ticket.id)}</span> ${escHtml(ticket.summary)}`;
+        modalSubtitle.textContent = `${ticket.keyword} • ${ticket.feature}`;
+        fields.innerHTML = [
+          ticketField("Summary", escHtml(ticket.summary), "summary-main"),
+          ticketField("Priority", priorityBadge(ticket.priority)),
+          ticketField("Status", statusBadge(ticket.status)),
+          ...(ticket.description ? [ticketField("Description", escHtml(ticket.description), "wide")] : []),
+          ...(ticket.preCondition ? [ticketField("Pre-Condition", escHtml(ticket.preCondition), "wide")] : []),
+          ticketField("Steps to Reproduce", stepList(ticket), "full"),
+          ticketField("Expected Result", escHtml(ticket.expected), "wide"),
+          ticketField("Observed Result", escHtml(ticket.observed), "wide"),
+          ticketField("Reproducibility", escHtml(ticket.reproducibility)),
+          ticketField("Keyword", escHtml(ticket.keyword), "wide"),
+          ticketField("Note", `<textarea class="ticket-edit-control" id="ticketNoteControl">${escHtml(ticket.note)}</textarea>`, "full"),
+          ...(ticket.suggestedFix ? [ticketField("Suggested Fix", escHtml(ticket.suggestedFix), "full")] : []),
+          '<div class="ticket-save-row"><span class="ticket-save-state" id="ticketSaveState"></span><button type="button" class="ticket-save-button" id="saveTicketUpdate">Save</button></div>'
+        ].join("");
+        evidenceGrid.innerHTML = renderEvidence(ticket);
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+      }
+      function closeTicket() {
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+      }
+      function ticketMarkdown(ticket) {
+        return [
+          `# ${ticket.id} - ${ticket.summary}`,
+          "",
+          `Description: ${ticket.description}`,
+          ...(ticket.preCondition ? [`Pre-Condition: ${ticket.preCondition}`] : []),
+          "",
+          "Steps to Reproduce:",
+          ...ticket.steps.map((step, index) => `B${index + 1}: ${step}`),
+          "",
+          `Expected Result: ${ticket.expected}`,
+          `Observed Result: ${ticket.observed}`,
+          "",
+          `Build found: ${ticket.build}`,
+          `Reproducibility: ${ticket.reproducibility}`,
+          `Severity: ${ticket.severity}`,
+          `Frequency: ${ticket.frequency}`,
+          `Priority: ${ticket.priority}`,
+          `Keyword: ${ticket.keyword}`,
+          `Status: ${ticket.status}`,
+          `Resolution: ${ticket.resolution}`,
+          `Note: ${ticket.note}`,
+          ...(ticket.suggestedFix ? [`Suggested Fix: ${ticket.suggestedFix}`] : [])
+        ].join("\n");
+      }
+      const bugListHeaders = ["ID", "Summary", "Description", "Pre-Condition", "Steps to Reproduce\n(Including Expected Result and Observed Result)", "Build found", "Reproducibility", "Severity", "Frequency", "Priority", "Keyword", "Status", "Resolution", "Note", "Suggested Fix"];
+      function ticketRow(ticket) {
+        return [
+          ticket.id,
+          ticket.summary,
+          ticket.description,
+          ticket.preCondition || "",
+          `${ticket.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}\n\nExpected Result: ${ticket.expected}\nObserved Result: ${ticket.observed}`,
+          ticket.build,
+          ticket.reproducibility,
+          ticket.severity,
+          ticket.frequency,
+          ticket.priority,
+          ticket.feature,
+          ticket.status,
+          ticket.resolution,
+          ticket.note,
+          ticket.suggestedFix || ""
+        ];
+      }
+      function allTickets() { return sortedTickets().map(ticket => savedTicket(ticket.id)); }
+      function groupByFeature(tickets) {
+        return tickets.reduce((groups, ticket) => {
+          if (!groups[ticket.feature]) groups[ticket.feature] = [];
+          groups[ticket.feature].push(ticket);
+          return groups;
+        }, {});
+      }
+      function exportMarkdown(tickets) {
+        const groups = groupByFeature(tickets);
+        return Object.keys(groups).map(feature => {
+          const items = groups[feature].map(ticket => {
+            const values = ticketRow(ticket);
+            return "## " + ticket.id + " - " + ticket.summary + "\n\n" + bugListHeaders.map((header, index) => {
+              return "**" + header.replace(/\n/g, " ") + ":**\n" + (values[index] || "");
+            }).join("\n\n");
+          }).join("\n\n");
+          return "# Feature: " + feature + "\n\n" + items;
+        }).join("\n\n");
+      }
+      function exportExcelHtml(tickets) {
+        const groups = groupByFeature(tickets);
+        let bugIndex = 0;
+        const headerRow = "<tr>" + bugListHeaders.map(header => `<th style="background:#d9eaf7;color:#172033;font-weight:bold;border:1px solid #6b7280;padding:6px;">${escHtml(header).replace(/\n/g, "<br>")}</th>`).join("") + "</tr>";
+        const rows = Object.keys(groups).map(feature => {
+          const groupRow = `<tr><td colspan="${bugListHeaders.length}" style="background:#173b63;color:#ffffff;font-weight:bold;font-size:14px;border:1px solid #0f172a;padding:7px;">Feature: ${escHtml(feature)}</td></tr>`;
+          const bugRows = groups[feature].map(ticket => {
+            const bg = bugIndex % 2 === 0 ? "#ffffff" : "#eaf3ff";
+            bugIndex += 1;
+            return "<tr>" + ticketRow(ticket).map(value => `<td style="background:${bg};border:1px solid #9ca3af;padding:6px;vertical-align:top;mso-number-format:\\@;">${escHtml(value).replace(/\n/g, "<br>")}</td>`).join("") + "</tr>";
+          }).join("");
+          return groupRow + bugRows;
+        }).join("");
+        return '<html><head><meta charset="utf-8"></head><body><table border="1">' + headerRow + rows + "</table></body></html>";
+      }
+      function download(filename, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+      function saveActiveTicket() {
+        if (!activeTicket) return;
+        const picker = fields.querySelector(".resolution-picker");
+        const note = fields.querySelector("#ticketNoteControl");
+        const resolution = picker ? picker.dataset.selectedResolution : activeTicket.resolution;
+        const status = resolution === "Fixed" ? "Fixed" : activeTicket.status;
+        storage.save(activeTicket.id, { resolution, note: note ? note.value : activeTicket.note, status });
+        const state = document.getElementById("ticketSaveState");
+        if (state) {
+          state.textContent = "Saved";
+          setTimeout(() => { state.textContent = ""; }, 1400);
+        }
+        renderRows();
+        applyFilters();
+        openTicket(activeTicket.id);
+      }
+      function openEvidenceViewer(index) {
+        const item = activeEvidence[index];
+        if (!item) return;
+        currentEvidenceIndex = index;
+        evidenceZoom = 1;
+        evidenceViewerTitle.textContent = item.title || "Step Evidence";
+        evidenceViewerCanvas.innerHTML = `<img src="${escHtml(item.src)}" alt="${escHtml(item.title || "Evidence")}" />`;
+        evidenceViewer.classList.add("show");
+        evidenceViewer.setAttribute("aria-hidden", "false");
+        updateEvidenceNav();
+      }
+      function updateEvidenceNav() {
+        prevEvidenceImage.disabled = currentEvidenceIndex <= 0;
+        nextEvidenceImage.disabled = currentEvidenceIndex >= activeEvidence.length - 1;
+      }
+      function showPrevEvidence() {
+        if (!evidenceViewer.classList.contains("show")) return;
+        if (currentEvidenceIndex > 0) openEvidenceViewer(currentEvidenceIndex - 1);
+      }
+      function showNextEvidence() {
+        if (!evidenceViewer.classList.contains("show")) return;
+        if (currentEvidenceIndex < activeEvidence.length - 1) openEvidenceViewer(currentEvidenceIndex + 1);
+      }
+      function applyEvidenceZoom() {
+        const img = evidenceViewerCanvas.querySelector("img");
+        if (img) img.style.transform = `scale(${evidenceZoom})`;
+      }
+
+      renderRows();
+      applyFilters();
+
+      document.getElementById("toggleOptional").addEventListener("click", () => {
+        document.body.classList.toggle("show-optional");
+        document.getElementById("toggleOptional").textContent = document.body.classList.contains("show-optional") ? "Hide optional bug fields" : "Show all bug fields";
+      });
+      document.getElementById("applyBugFilter").addEventListener("click", applyFilters);
+      document.getElementById("resetBugFilter").addEventListener("click", () => {
+        document.getElementById("bugFeatureFilter").value = "";
+        document.getElementById("bugPriorityFilter").value = "";
+        document.getElementById("bugStatusFilter").value = "";
+        document.getElementById("bugDateFilter").value = "";
+        applyFilters();
+      });
+      bugTableBody.addEventListener("click", event => {
+        const button = event.target.closest("[data-view-ticket]");
+        if (!button) return;
+        openTicket(button.dataset.viewTicket);
+      });
+      fields.addEventListener("click", event => {
+        const button = event.target.closest(".resolution-picker-button");
+        if (button) {
+          button.closest(".resolution-picker").classList.toggle("open");
+          return;
+        }
+        const option = event.target.closest(".resolution-option");
+        if (option) {
+          const picker = option.closest(".resolution-picker");
+          picker.dataset.selectedResolution = option.dataset.resolutionValue;
+          picker.querySelector(".resolution-picker-button").textContent = optionByValue(option.dataset.resolutionValue).label;
+          picker.querySelectorAll(".resolution-option").forEach(item => item.classList.toggle("active", item === option));
+          picker.classList.remove("open");
+          return;
+        }
+        if (event.target.closest("#saveTicketUpdate")) saveActiveTicket();
+      });
+      document.addEventListener("click", event => {
+        if (!event.target.closest(".resolution-picker")) {
+          fields.querySelectorAll(".resolution-picker.open").forEach(picker => picker.classList.remove("open"));
+        }
+      });
+      closeModal.addEventListener("click", closeTicket);
+      modal.addEventListener("click", event => { if (event.target === modal) closeTicket(); });
+      exportExcel.addEventListener("click", () => download("technext_landing_page_bug_report.xls", exportExcelHtml(allTickets()), "application/vnd.ms-excel;charset=utf-8"));
+      evidenceGrid.addEventListener("click", event => {
+        const card = event.target.closest(".evidence-card");
+        if (!card) return;
+        openEvidenceViewer(Number(card.dataset.evidenceIndex));
+      });
+      closeEvidenceViewer.addEventListener("click", event => { event.stopPropagation(); evidenceViewer.classList.remove("show"); });
+      evidenceViewer.addEventListener("click", event => { if (event.target === evidenceViewer) evidenceViewer.classList.remove("show"); });
+      prevEvidenceImage.addEventListener("click", event => { event.stopPropagation(); showPrevEvidence(); });
+      nextEvidenceImage.addEventListener("click", event => { event.stopPropagation(); showNextEvidence(); });
+      zoomInEvidence.addEventListener("click", event => { event.stopPropagation(); evidenceZoom = Math.min(2.5, evidenceZoom + .2); applyEvidenceZoom(); });
+      zoomOutEvidence.addEventListener("click", event => { event.stopPropagation(); evidenceZoom = Math.max(.5, evidenceZoom - .2); applyEvidenceZoom(); });
+      resetEvidenceZoom.addEventListener("click", event => { event.stopPropagation(); evidenceZoom = 1; applyEvidenceZoom(); });
+      document.addEventListener("keydown", event => {
+        if (evidenceViewer.classList.contains("show") && (event.key === "ArrowLeft" || event.key === "<")) {
+          event.preventDefault();
+          showPrevEvidence();
+          return;
+        }
+        if (evidenceViewer.classList.contains("show") && (event.key === "ArrowRight" || event.key === ">")) {
+          event.preventDefault();
+          showNextEvidence();
+          return;
+        }
+        if (event.key === "Escape") {
+          if (evidenceViewer.classList.contains("show")) evidenceViewer.classList.remove("show");
+          else closeTicket();
+        }
+      });
+    </script>
+  </body>
+</html>

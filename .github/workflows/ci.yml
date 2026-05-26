@@ -29,6 +29,23 @@ jobs:
           cat /tmp/odoo_test.log | python scripts/parse_odoo_test_log.py > /tmp/failures.json || true
           cat /tmp/failures.json
 
+      - name: Upload report to webapp
+        if: steps.odoo_test.outcome == 'failure'
+        continue-on-error: true
+        id: upload_report
+        env:
+          BACKEND_URL: ${{ vars.COMPONENT_A_BASE_URL }}
+          COMPONENT_A_PIPELINE_KEY: ${{ secrets.COMPONENT_A_PIPELINE_KEY }}
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+        run: |
+          pip install requests cloudinary
+          SHARE_URL=$(python scripts/upload_report.py \
+            --html bug_report_landingPage/bug_report_landingPage.html \
+            --title "CI Report — ${{ github.ref_name }} @ ${{ github.sha }}" \
+            --report-dir bug_report_landingPage \
+            --created-by "ci-bot") || true
+          echo "SHARE_URL=${SHARE_URL}" >> $GITHUB_ENV
+
       - name: Report failures to Odoo
         if: steps.odoo_test.outcome == 'failure'
         env:
@@ -40,7 +57,8 @@ jobs:
             --failures-json /tmp/failures.json \
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --commit "${{ github.sha }}" \
-            --branch "${{ github.ref_name }}"
+            --branch "${{ github.ref_name }}" \
+            --report-url "${SHARE_URL:-}"
 
       - name: Fail job if tests failed
         if: steps.odoo_test.outcome == 'failure'
