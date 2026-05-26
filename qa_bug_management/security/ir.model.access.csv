@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_qa_bug_ticket_user,qa.bug.ticket.user,model_qa_bug_ticket,group_qa_user,1,1,0,0
+access_qa_bug_ticket_manager,qa.bug.ticket.manager,model_qa_bug_ticket,group_qa_manager,1,1,1,1
+access_qa_bug_evidence_user,qa.bug.evidence.user,model_qa_bug_evidence,group_qa_user,1,1,0,0
+access_qa_bug_evidence_manager,qa.bug.evidence.manager,model_qa_bug_evidence,group_qa_manager,1,1,1,1

@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main, '18.0']
+
+jobs:
+  test-odoo:
+    name: Odoo Module Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Odoo tests
+        run: bash scripts/run_odoo_tests.sh 2>&1 | tee /tmp/odoo_test.log
+        continue-on-error: true
+        id: odoo_test
+
+      - name: Parse test results
+        if: always()
+        run: |
+          cat /tmp/odoo_test.log | python scripts/parse_odoo_test_log.py > /tmp/failures.json || true
+          cat /tmp/failures.json
+
+      - name: Report failures to Odoo
+        if: steps.odoo_test.outcome == 'failure'
+        env:
+          ODOO_URL: ${{ secrets.ODOO_URL }}
+          QA_CI_KEY: ${{ secrets.QA_CI_KEY }}
+        run: |
+          pip install requests
+          python scripts/report_ci_failure.py \
+            --failures-json /tmp/failures.json \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --commit "${{ github.sha }}" \
+            --branch "${{ github.ref_name }}"
+
+      - name: Fail job if tests failed
+        if: steps.odoo_test.outcome == 'failure'
+        run: exit 1
+
+  test-webapp:
+    name: Next.js Webapp Health Check
+    runs-on: ubuntu-latest
+    if: vars.COMPONENT_A_BASE_URL != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check
+        run: |
+          curl -f "${{ vars.COMPONENT_A_BASE_URL }}/api/health" \
+            || (echo "Webapp health check failed" && exit 1)
+
+      - name: Smoke test — create + fetch report
+        env:
+          PIPELINE_KEY: ${{ secrets.COMPONENT_A_PIPELINE_KEY }}
+          BASE_URL: ${{ vars.COMPONENT_A_BASE_URL }}
+        run: |
+          pip install requests
+          python scripts/smoke_test_webapp.py
+
+  lint-check:
+    name: Quick Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install and type-check webapp
+        working-directory: webapp
+        run: npm ci && npx tsc --noEmit
