@@ -6,7 +6,7 @@ from odoo.http import request
 
 class CiIntakeController(http.Controller):
 
-    @http.route('/qa/ci/bug', type='http', auth='none', methods=['POST'], csrf=False)
+    @http.route('/qa/ci/bug', type='http', auth='public', methods=['POST'], csrf=False)
     def ci_intake(self, **kwargs):
         # Key-based authentication
         ci_key = request.httprequest.headers.get('X-CI-Key', '')
