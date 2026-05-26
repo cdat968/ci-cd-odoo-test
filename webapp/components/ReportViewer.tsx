@@ -10,7 +10,7 @@ export default function ReportViewer({ html, title }: ReportViewerProps) {
     <>
       <title>{title}</title>
       <iframe
-        srcdoc={html}
+        srcDoc={html}
         title={title}
         style={{ width: '100%', height: '100vh', border: 'none' }}
       />
