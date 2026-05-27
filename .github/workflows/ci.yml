@@ -70,20 +70,20 @@ jobs:
   test-webapp:
     name: Next.js Webapp Health Check
     runs-on: ubuntu-latest
-    if: vars.BASE_URL != ''
+    if: vars.COMPONENT_A_BASE_URL != ''
     steps:
       - uses: actions/checkout@v4
 
       - name: Health check
         run: |
-          curl -f "${{ vars.BASE_URL }}/api/health" \
+          curl -f "${{ vars.COMPONENT_A_BASE_URL }}/api/health" \
             || (echo "Webapp health check failed" && exit 1)
 
       - name: Smoke test — create + patch report
         env:
           ODOO_URL: ${{ secrets.ODOO_URL }}
           QA_CI_KEY: ${{ secrets.QA_CI_KEY }}
-          BASE_URL: ${{ vars.BASE_URL }}
+          BASE_URL: ${{ vars.COMPONENT_A_BASE_URL }}
         run: |
           pip install requests
           python scripts/smoke_test_webapp.py
