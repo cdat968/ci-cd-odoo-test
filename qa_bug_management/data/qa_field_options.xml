@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- severity -->
+    <record id="opt_severity_s1" model="qa.field.option">
+        <field name="field_name">severity</field>
+        <field name="value">s1_critical</field>
+        <field name="label">S1 - Critical</field>
+        <field name="sequence">1</field>
+        <field name="description">Lỗi nghiêm trọng, chặn release hoặc chặn việc sử dụng sản phẩm. Ứng dụng crash, mất dữ liệu, hệ thống không khởi động, chức năng lõi không hoạt động.</field>
+    </record>
+    <record id="opt_severity_s2" model="qa.field.option">
+        <field name="field_name">severity</field>
+        <field name="value">s2_major</field>
+        <field name="label">S2 - Major</field>
+        <field name="sequence">2</field>
+        <field name="description">Lỗi lớn, gây vấn đề nghiêm trọng với chức năng quan trọng, khó workaround nhưng chưa nhất thiết chặn release. Workflow quan trọng bị đứt, tính năng quan trọng chạy sai.</field>
+    </record>
+    <record id="opt_severity_s3" model="qa.field.option">
+        <field name="field_name">severity</field>
+        <field name="value">s3_minor</field>
+        <field name="label">S3 - Minor</field>
+        <field name="sequence">3</field>
+        <field name="description">Lỗi chức năng có ảnh hưởng hạn chế, thường có workaround. Button hoạt động sai trong case phụ, thông báo chưa đúng, lỗi chức năng ở tình huống ít quan trọng.</field>
+    </record>
+    <record id="opt_severity_s4" model="qa.field.option">
+        <field name="field_name">severity</field>
+        <field name="value">s4_trivial</field>
+        <field name="label">S4 - Trivial</field>
+        <field name="sequence">4</field>
+        <field name="description">Lỗi rất nhỏ, tác động không đáng kể, chủ yếu liên quan giao diện hoặc văn bản. Sai chính tả, lệch layout nhẹ, spacing chưa đều, icon chưa đồng nhất.</field>
+    </record>
+
+    <!-- priority -->
+    <record id="opt_priority_p1" model="qa.field.option">
+        <field name="field_name">priority</field>
+        <field name="value">p1_urgent</field>
+        <field name="label">P1 - Urgent</field>
+        <field name="sequence">1</field>
+        <field name="description">Phải fix ngay, chặn chức năng critical hoặc chặn release. Chọn khi bug ảnh hưởng trực tiếp đến khả năng phát hành hoặc sử dụng chức năng sống còn.</field>
+    </record>
+    <record id="opt_priority_p2" model="qa.field.option">
+        <field name="field_name">priority</field>
+        <field name="value">p2_high</field>
+        <field name="label">P2 - High</field>
+        <field name="sequence">2</field>
+        <field name="description">Cần fix sớm nhất có thể nhưng chưa chặn release. Chọn khi bug ảnh hưởng rõ đến người dùng hoặc chức năng quan trọng.</field>
+    </record>
+    <record id="opt_priority_p3" model="qa.field.option">
+        <field name="field_name">priority</field>
+        <field name="value">p3_medium</field>
+        <field name="label">P3 - Medium</field>
+        <field name="sequence">3</field>
+        <field name="description">Quan trọng nhưng có thể lên kế hoạch cho sprint/release sau. Chọn khi bug cần sửa nhưng chưa gây rủi ro ngay cho release hiện tại.</field>
+    </record>
+    <record id="opt_priority_p4" model="qa.field.option">
+        <field name="field_name">priority</field>
+        <field name="value">p4_low</field>
+        <field name="label">P4 - Low</field>
+        <field name="sequence">4</field>
+        <field name="description">Lỗi nhỏ hoặc cosmetic, chỉ fix nếu có thời gian. Chọn khi bug ít ảnh hưởng hoặc chủ yếu là cải thiện trải nghiệm.</field>
+    </record>
+
+    <!-- frequency -->
+    <record id="opt_frequency_everytime" model="qa.field.option">
+        <field name="field_name">frequency</field>
+        <field name="value">everytime</field>
+        <field name="label">Everytime</field>
+        <field name="sequence">1</field>
+        <field name="description">Bug xảy ra mọi lần hoặc gần như mọi lần trong cùng điều kiện. Chọn khi chỉ cần làm đúng steps là bug xuất hiện.</field>
+    </record>
+    <record id="opt_frequency_sometimes" model="qa.field.option">
+        <field name="field_name">frequency</field>
+        <field name="value">sometimes</field>
+        <field name="label">Sometimes</field>
+        <field name="sequence">2</field>
+        <field name="description">Bug xảy ra thỉnh thoảng. Chọn khi bug không ổn định nhưng có thể gặp lại.</field>
+    </record>
+    <record id="opt_frequency_hardly" model="qa.field.option">
+        <field name="field_name">frequency</field>
+        <field name="value">hardly</field>
+        <field name="label">Hardly</field>
+        <field name="sequence">3</field>
+        <field name="description">Bug rất hiếm xảy ra. Chọn khi bug khó gặp, xác suất xảy ra thấp trong sử dụng bình thường.</field>
+    </record>
+
+    <!-- reproducibility -->
+    <record id="opt_repro_always" model="qa.field.option">
+        <field name="field_name">reproducibility</field>
+        <field name="value">always</field>
+        <field name="label">Always</field>
+        <field name="sequence">1</field>
+        <field name="description">Bug xảy ra mọi lần khi thực hiện đúng điều kiện và các bước tái hiện. Chọn khi bug ổn định, dễ tái hiện.</field>
+    </record>
+    <record id="opt_repro_intermittent" model="qa.field.option">
+        <field name="field_name">reproducibility</field>
+        <field name="value">intermittent</field>
+        <field name="label">Intermittent</field>
+        <field name="sequence">2</field>
+        <field name="description">Bug xảy ra không ổn định, lúc có lúc không. Chọn khi bug phụ thuộc điều kiện khó kiểm soát hoặc xuất hiện ngẫu nhiên.</field>
+    </record>
+    <record id="opt_repro_once" model="qa.field.option">
+        <field name="field_name">reproducibility</field>
+        <field name="value">once</field>
+        <field name="label">Once</field>
+        <field name="sequence">3</field>
+        <field name="description">Bug mới xảy ra một lần và chưa tái hiện lại được. Chọn khi tester chỉ quan sát được lỗi một lần nhưng có lý do để ghi nhận, đặc biệt nếu có ảnh, video hoặc log.</field>
+    </record>
+
+    <!-- resolution -->
+    <record id="opt_res_fixed" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">fixed</field>
+        <field name="label">Fixed</field>
+        <field name="sequence">1</field>
+        <field name="description">Bug đã được fix và xác nhận hoạt động đúng.</field>
+    </record>
+    <record id="opt_res_not_reproducible" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">not_reproducible</field>
+        <field name="label">Not Reproducible</field>
+        <field name="sequence">2</field>
+        <field name="description">Không thể tái hiện lại bug sau khi thử nhiều lần. Cần ghi rõ điều kiện đã thử và bằng chứng ban đầu.</field>
+    </record>
+    <record id="opt_res_not_a_bug" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">not_a_bug</field>
+        <field name="label">Not a Bug</field>
+        <field name="sequence">3</field>
+        <field name="description">Hành vi được báo cáo là đúng theo thiết kế hoặc yêu cầu. Không phải lỗi.</field>
+    </record>
+    <record id="opt_res_duplicated" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">duplicated</field>
+        <field name="label">Duplicated</field>
+        <field name="sequence">4</field>
+        <field name="description">Bug này đã được báo cáo trước đó. Cần link đến bug gốc.</field>
+    </record>
+    <record id="opt_res_wont_fix" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">wont_fix</field>
+        <field name="label">Won't Fix</field>
+        <field name="sequence">5</field>
+        <field name="description">Bug được chấp nhận nhưng không có kế hoạch fix do chi phí, ưu tiên, hoặc quyết định nghiệp vụ.</field>
+    </record>
+    <record id="opt_res_deferred" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">deferred</field>
+        <field name="label">Deferred</field>
+        <field name="sequence">6</field>
+        <field name="description">Bug được ghi nhận nhưng hoãn lại để xử lý ở sprint/release sau.</field>
+    </record>
+    <record id="opt_res_feature_limitation" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">feature_limitation</field>
+        <field name="label">Feature Limitation</field>
+        <field name="sequence">7</field>
+        <field name="description">Hành vi là giới hạn của tính năng hiện tại, không phải lỗi kỹ thuật. Có thể được cải thiện trong version sau.</field>
+    </record>
+    <record id="opt_res_na" model="qa.field.option">
+        <field name="field_name">resolution</field>
+        <field name="value">na</field>
+        <field name="label">N/A</field>
+        <field name="sequence">8</field>
+        <field name="description">Không áp dụng. Dùng khi bug chưa được xử lý hoặc resolution chưa xác định.</field>
+    </record>
+
+    <!-- status -->
+    <record id="opt_status_new" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">new</field>
+        <field name="label">New</field>
+        <field name="sequence">1</field>
+        <field name="description">Bug mới được báo cáo và chưa được xử lý. Tester/Reporter tạo bug; Lead hoặc Manager review.</field>
+    </record>
+    <record id="opt_status_assigned" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">assigned</field>
+        <field name="label">Assigned</field>
+        <field name="sequence">2</field>
+        <field name="description">Bug đã được giao cho developer. Developer nhận xử lý.</field>
+    </record>
+    <record id="opt_status_in_progress" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">in_progress</field>
+        <field name="label">In Progress</field>
+        <field name="sequence">3</field>
+        <field name="description">Developer đang fix bug.</field>
+    </record>
+    <record id="opt_status_fixed" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">fixed</field>
+        <field name="label">Fixed</field>
+        <field name="sequence">4</field>
+        <field name="description">Bug đã được developer fix và trả lại để tester kiểm tra.</field>
+    </record>
+    <record id="opt_status_in_verification" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">in_verification</field>
+        <field name="label">In Verification</field>
+        <field name="sequence">5</field>
+        <field name="description">Tester đang kiểm tra bản fix.</field>
+    </record>
+    <record id="opt_status_closed" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">closed</field>
+        <field name="label">Closed</field>
+        <field name="sequence">6</field>
+        <field name="description">Bug đã được xác nhận fix thành công và đóng. Tester hoặc người có quyền đóng bug.</field>
+    </record>
+    <record id="opt_status_reopened" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">reopened</field>
+        <field name="label">Re-opened</field>
+        <field name="sequence">7</field>
+        <field name="description">Bug vẫn còn sau khi fix hoặc phát sinh lại. Tester mở lại để developer xử lý tiếp.</field>
+    </record>
+    <record id="opt_status_rejected" model="qa.field.option">
+        <field name="field_name">status</field>
+        <field name="value">rejected</field>
+        <field name="label">Rejected</field>
+        <field name="sequence">8</field>
+        <field name="description">Bug bị từ chối vì một lý do cụ thể. Lead/Manager/Developer tùy quy trình.</field>
+    </record>
+
+</odoo>

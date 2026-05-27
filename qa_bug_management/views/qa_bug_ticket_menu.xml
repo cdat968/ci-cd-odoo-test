@@ -20,10 +20,22 @@
               name="QA"
               sequence="90"/>
 
+    <menuitem id="menu_qa_reports"
+              name="Reports"
+              parent="menu_qa_root"
+              action="action_qa_report"
+              sequence="5"/>
+
     <menuitem id="menu_qa_bugs"
               name="Bug Tickets"
               parent="menu_qa_root"
               action="action_qa_bug_ticket"
               sequence="10"/>
+
+    <menuitem id="menu_qa_field_options"
+              name="Field Options"
+              parent="menu_qa_root"
+              action="action_qa_field_option"
+              sequence="90"/>
 
 </odoo>

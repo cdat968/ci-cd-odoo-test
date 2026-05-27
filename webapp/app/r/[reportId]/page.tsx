@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { verifyShareToken } from '@/lib/auth';
-import { sql } from '@/lib/db';
 import ReportViewer from '@/components/ReportViewer';
-import { parseHtmlReport } from '@/lib/parseHtmlReport';
 import type { BugRecord, ReportMeta } from '@/types';
 
 type Props = {
@@ -11,73 +8,68 @@ type Props = {
   searchParams: Promise<{ t?: string }>;
 };
 
+type OdooReportResponse = {
+  id: number;
+  title: string;
+  project_name: string;
+  report_date: string;
+  total_bugs: number;
+  open_bugs: number;
+  high_priority_count: number;
+  bugs: BugRecord[];
+  error?: string;
+};
+
+async function fetchReport(shareToken: string): Promise<OdooReportResponse | null> {
+  const odooUrl = process.env.ODOO_URL?.replace(/\/$/, '');
+  if (!odooUrl) return null;
+
+  try {
+    const res = await fetch(`${odooUrl}/qa/api/report/${shareToken}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-  const { reportId } = await params;
   const { t: token } = await searchParams;
+  if (!token) return { title: 'Report Not Found' };
 
-  const valid = await verifyShareToken(reportId, token ?? null);
-  if (!valid) return { title: 'Report Not Found' };
+  const data = await fetchReport(token);
+  if (!data || data.error) return { title: 'Report Not Found' };
 
-  const rows = await sql`SELECT title FROM report WHERE id = ${reportId}`;
-  if (rows.length === 0) return { title: 'Report Not Found' };
-
-  return { title: rows[0].title as string };
+  return { title: data.title };
 }
 
 export default async function ReportPage({ params, searchParams }: Props) {
   const { reportId } = await params;
   const { t: token } = await searchParams;
 
-  const valid = await verifyShareToken(reportId, token ?? null);
-  if (!valid) notFound();
+  if (!token) notFound();
 
-  const [reportRows, patchRows] = await Promise.all([
-    sql`SELECT title, payload, html FROM report WHERE id = ${reportId}`,
-    sql`SELECT bug_id, note, resolution, status FROM bug_patch WHERE report_id = ${reportId}`,
-  ]);
+  const data = await fetchReport(token);
+  if (!data || data.error) notFound();
 
-  if (reportRows.length === 0) notFound();
+  const bugs: BugRecord[] = data.bugs ?? [];
 
-  const row = reportRows[0];
-  const title = row.title as string;
-  const rawPayload = row.payload as { bugs?: BugRecord[]; metadata?: ReportMeta } | null;
-
-  let bugs: BugRecord[] = rawPayload?.bugs ?? [];
-  let metadata: ReportMeta = rawPayload?.metadata ?? {
-    project_name: title,
-    report_date: '',
-    total_bugs: 0,
-    open_bugs: 0,
-    high_priority_count: 0,
+  const metadata: ReportMeta = {
+    project_name: data.project_name || data.title,
+    report_date: data.report_date || '',
+    total_bugs: data.total_bugs ?? bugs.length,
+    open_bugs: data.open_bugs ?? 0,
+    high_priority_count: data.high_priority_count ?? 0,
   };
-
-  // Legacy reports uploaded before Phase 1: payload is empty, parse HTML on-the-fly.
-  if (bugs.length === 0 && row.html) {
-    const parsed = parseHtmlReport(row.html as string);
-    bugs = parsed.bugs;
-    metadata = parsed.metadata.project_name ? parsed.metadata : { ...parsed.metadata, project_name: title };
-  }
-
-  // Merge bug_patch overrides (note, resolution, status) into bug data.
-  const patches = patchRows as unknown as { bug_id: string; note: string | null; resolution: string | null; status: string | null }[];
-  const patchMap = new Map(patches.map(p => [p.bug_id, p]));
-  const mergedBugs = bugs.map(bug => {
-    const patch = patchMap.get(bug.id);
-    if (!patch) return bug;
-    return {
-      ...bug,
-      ...(patch.note !== null && { note: patch.note }),
-      ...(patch.resolution !== null && { resolution: patch.resolution }),
-      ...(patch.status !== null && { status: patch.status }),
-    };
-  });
 
   return (
     <ReportViewer
-      bugs={mergedBugs}
+      bugs={bugs}
       metadata={metadata}
       reportId={reportId}
-      shareToken={token ?? ''}
+      shareToken={token}
     />
   );
 }

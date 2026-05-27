@@ -1,6 +1,6 @@
 {
     'name': 'QA Bug Management',
-    'version': '18.0.1.0.0',
+    'version': '18.0.3.0.0',
     'category': 'Quality',
     'summary': 'Automated QA bug ticket management with CI/CD integration',
     'depends': ['base', 'mail'],
@@ -8,7 +8,10 @@
         'security/qa_bug_security.xml',
         'security/ir.model.access.csv',
         'data/qa_bug_sequence.xml',
+        'data/qa_field_options.xml',
         'views/qa_bug_ticket_views.xml',
+        'views/qa_field_option_views.xml',
+        'views/qa_report_views.xml',
         'views/qa_bug_ticket_menu.xml',
     ],
     'installable': True,

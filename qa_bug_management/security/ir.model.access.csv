@@ -3,3 +3,7 @@ access_qa_bug_ticket_user,qa.bug.ticket.user,model_qa_bug_ticket,group_qa_user,1
 access_qa_bug_ticket_manager,qa.bug.ticket.manager,model_qa_bug_ticket,group_qa_manager,1,1,1,1
 access_qa_bug_evidence_user,qa.bug.evidence.user,model_qa_bug_evidence,group_qa_user,1,1,0,0
 access_qa_bug_evidence_manager,qa.bug.evidence.manager,model_qa_bug_evidence,group_qa_manager,1,1,1,1
+access_qa_field_option_user,qa.field.option.user,model_qa_field_option,group_qa_user,1,0,0,0
+access_qa_field_option_manager,qa.field.option.manager,model_qa_field_option,group_qa_manager,1,1,1,1
+access_qa_report_user,qa.report.user,model_qa_report,group_qa_user,1,0,0,0
+access_qa_report_manager,qa.report.manager,model_qa_report,group_qa_manager,1,1,1,1

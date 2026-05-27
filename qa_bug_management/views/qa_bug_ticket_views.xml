@@ -9,36 +9,63 @@
             <form string="Bug Ticket">
                 <header>
                     <field name="status" widget="statusbar"
-                           statusbar_visible="new,triaged,in_progress,fixed"/>
+                           statusbar_visible="new,assigned,in_progress,fixed,in_verification,closed"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
                         <label for="name" class="oe_edit_only"/>
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
+                        <h1><field name="name" readonly="1"/></h1>
                         <label for="title"/>
-                        <h2>
-                            <field name="title" placeholder="Bug title..."/>
-                        </h2>
+                        <h2><field name="title" placeholder="Bug summary..."/></h2>
                     </div>
                     <group>
-                        <group>
+                        <group string="Classification">
                             <field name="severity"/>
-                            <field name="source"/>
-                            <field name="reporter"/>
-                            <field name="assignee_id"/>
+                            <field name="priority"/>
+                            <field name="frequency"/>
+                            <field name="reproducibility"/>
                         </group>
-                        <group>
-                            <field name="ci_branch"/>
-                            <field name="ci_commit_sha"/>
-                            <field name="component_a_bug_id"/>
+                        <group string="Assignment">
+                            <field name="source"/>
+                            <field name="assignee_id"/>
+                            <field name="reporter"/>
+                            <field name="resolution"/>
                             <field name="resolved_at"/>
                         </group>
                     </group>
+                    <group>
+                        <group string="Context">
+                            <field name="feature_area"/>
+                            <field name="keyword"/>
+                            <field name="build_found"/>
+                        </group>
+                        <group string="Traceability">
+                            <field name="ci_branch"/>
+                            <field name="ci_commit_sha"/>
+                            <field name="component_a_bug_id"/>
+                        </group>
+                    </group>
                     <notebook>
-                        <page string="Description" name="description">
-                            <field name="description" widget="html"/>
+                        <page string="Reproduction" name="reproduction">
+                            <group>
+                                <field name="steps" placeholder="1. Go to...\n2. Click...\n3. Observe..." nolabel="1"/>
+                            </group>
+                            <group col="2">
+                                <group string="Expected Result">
+                                    <field name="expected_result" nolabel="1"/>
+                                </group>
+                                <group string="Observed Result">
+                                    <field name="observed_result" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <group>
+                                <field name="note" nolabel="1" placeholder="Additional notes..."/>
+                            </group>
+                            <group string="Suggested Fix">
+                                <field name="suggested_fix" nolabel="1" placeholder="Suggested fix or workaround..."/>
+                            </group>
                         </page>
                         <page string="Evidence" name="evidence">
                             <field name="evidence_ids">
@@ -83,21 +110,28 @@
         <field name="name">qa.bug.ticket.list</field>
         <field name="model">qa.bug.ticket</field>
         <field name="arch" type="xml">
-            <list string="Bug Tickets" decoration-danger="severity == 'critical'"
-                  decoration-warning="severity == 'high'"
-                  decoration-muted="status in ('fixed', 'wont_fix', 'duplicate')">
+            <list string="Bug Tickets"
+                  decoration-danger="severity == 's1_critical'"
+                  decoration-warning="severity == 's2_major'"
+                  decoration-muted="status in ('closed', 'rejected')">
                 <field name="name"/>
                 <field name="title"/>
+                <field name="feature_area" optional="show"/>
                 <field name="severity" widget="badge"
-                       decoration-danger="severity == 'critical'"
-                       decoration-warning="severity == 'high'"
-                       decoration-info="severity == 'medium'"
-                       decoration-success="severity == 'low'"/>
+                       decoration-danger="severity == 's1_critical'"
+                       decoration-warning="severity == 's2_major'"
+                       decoration-info="severity == 's3_minor'"
+                       decoration-success="severity == 's4_trivial'"/>
+                <field name="priority" widget="badge"
+                       decoration-danger="priority == 'p1_urgent'"
+                       decoration-warning="priority == 'p2_high'"
+                       decoration-info="priority == 'p3_medium'"
+                       decoration-success="priority == 'p4_low'"/>
                 <field name="status" widget="badge"
-                       decoration-success="status == 'fixed'"
+                       decoration-success="status == 'closed'"
                        decoration-danger="status == 'new'"
                        decoration-info="status == 'in_progress'"/>
-                <field name="ci_branch"/>
+                <field name="ci_branch" optional="show"/>
                 <field name="assignee_id"/>
                 <field name="create_date"/>
             </list>
@@ -114,11 +148,12 @@
                 <field name="name"/>
                 <field name="title"/>
                 <field name="severity"/>
+                <field name="priority"/>
                 <field name="status"/>
                 <field name="assignee_id"/>
                 <field name="ci_branch"/>
                 <progressbar field="severity"
-                             colors='{"critical": "danger", "high": "warning", "medium": "info", "low": "success"}'/>
+                             colors='{"s1_critical": "danger", "s2_major": "warning", "s3_minor": "info", "s4_trivial": "success"}'/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card oe_kanban_global_click">
@@ -130,17 +165,15 @@
                                 </div>
                                 <div class="o_kanban_record_top_right">
                                     <span t-attf-class="badge rounded-pill
-                                        #{record.severity.raw_value == 'critical' ? 'text-bg-danger' :
-                                          record.severity.raw_value == 'high' ? 'text-bg-warning' :
-                                          record.severity.raw_value == 'medium' ? 'text-bg-info' : 'text-bg-success'}">
+                                        #{record.severity.raw_value == 's1_critical' ? 'text-bg-danger' :
+                                          record.severity.raw_value == 's2_major'    ? 'text-bg-warning' :
+                                          record.severity.raw_value == 's3_minor'    ? 'text-bg-info' : 'text-bg-success'}">
                                         <field name="severity"/>
                                     </span>
                                 </div>
                             </div>
                             <div class="o_kanban_record_body">
-                                <span class="text-muted">
-                                    <field name="name"/>
-                                </span>
+                                <span class="text-muted"><field name="name"/></span>
                                 <t t-if="record.ci_branch.raw_value">
                                     <span class="ms-2 badge text-bg-secondary">
                                         <field name="ci_branch"/>
@@ -148,7 +181,14 @@
                                 </t>
                             </div>
                             <div class="o_kanban_record_bottom">
-                                <div class="oe_kanban_bottom_left"/>
+                                <div class="oe_kanban_bottom_left">
+                                    <span t-attf-class="badge rounded-pill
+                                        #{record.priority.raw_value == 'p1_urgent' ? 'text-bg-danger' :
+                                          record.priority.raw_value == 'p2_high'   ? 'text-bg-warning' :
+                                          record.priority.raw_value == 'p3_medium' ? 'text-bg-info' : 'text-bg-secondary'}">
+                                        <field name="priority"/>
+                                    </span>
+                                </div>
                                 <div class="oe_kanban_bottom_right">
                                     <field name="assignee_id" widget="many2one_avatar_user"/>
                                 </div>
@@ -168,46 +208,38 @@
             <search string="Search Bug Tickets">
                 <field name="title"/>
                 <field name="name"/>
+                <field name="feature_area"/>
+                <field name="keyword"/>
                 <field name="ci_branch"/>
                 <field name="assignee_id"/>
                 <separator/>
-                <filter string="New" name="filter_new" domain="[('status', '=', 'new')]"/>
-                <filter string="In Progress" name="filter_in_progress"
-                        domain="[('status', '=', 'in_progress')]"/>
-                <filter string="Fixed" name="filter_fixed"
-                        domain="[('status', '=', 'fixed')]"/>
+                <filter string="New"             name="filter_new"             domain="[('status','=','new')]"/>
+                <filter string="In Progress"     name="filter_in_progress"     domain="[('status','=','in_progress')]"/>
+                <filter string="In Verification" name="filter_in_verification" domain="[('status','=','in_verification')]"/>
+                <filter string="Closed"          name="filter_closed"          domain="[('status','=','closed')]"/>
                 <separator/>
-                <filter string="Critical" name="filter_critical"
-                        domain="[('severity', '=', 'critical')]"/>
-                <filter string="High" name="filter_high"
-                        domain="[('severity', '=', 'high')]"/>
-                <filter string="Medium" name="filter_medium"
-                        domain="[('severity', '=', 'medium')]"/>
-                <filter string="Low" name="filter_low"
-                        domain="[('severity', '=', 'low')]"/>
+                <filter string="S1 Critical" name="filter_s1" domain="[('severity','=','s1_critical')]"/>
+                <filter string="S2 Major"    name="filter_s2" domain="[('severity','=','s2_major')]"/>
+                <filter string="S3 Minor"    name="filter_s3" domain="[('severity','=','s3_minor')]"/>
+                <filter string="S4 Trivial"  name="filter_s4" domain="[('severity','=','s4_trivial')]"/>
                 <separator/>
-                <filter string="From CI" name="filter_ci"
-                        domain="[('source', '=', 'ci')]"/>
-                <filter string="From Report" name="filter_report"
-                        domain="[('source', '=', 'report_link')]"/>
-                <filter string="Manual" name="filter_manual"
-                        domain="[('source', '=', 'manual')]"/>
+                <filter string="P1 Urgent" name="filter_p1" domain="[('priority','=','p1_urgent')]"/>
+                <filter string="P2 High"   name="filter_p2" domain="[('priority','=','p2_high')]"/>
                 <separator/>
-                <filter string="My Tickets" name="filter_my"
-                        domain="[('assignee_id', '=', uid)]"/>
-                <filter string="Unassigned" name="filter_unassigned"
-                        domain="[('assignee_id', '=', False)]"/>
+                <filter string="From CI"     name="filter_ci"     domain="[('source','=','ci')]"/>
+                <filter string="From Report" name="filter_report" domain="[('source','=','report_link')]"/>
+                <filter string="Manual"      name="filter_manual" domain="[('source','=','manual')]"/>
+                <separator/>
+                <filter string="My Tickets"  name="filter_my"         domain="[('assignee_id','=',uid)]"/>
+                <filter string="Unassigned"  name="filter_unassigned" domain="[('assignee_id','=',False)]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Status" name="group_status"
-                            context="{'group_by': 'status'}"/>
-                    <filter string="Severity" name="group_severity"
-                            context="{'group_by': 'severity'}"/>
-                    <filter string="Branch" name="group_branch"
-                            context="{'group_by': 'ci_branch'}"/>
-                    <filter string="Source" name="group_source"
-                            context="{'group_by': 'source'}"/>
-                    <filter string="Assignee" name="group_assignee"
-                            context="{'group_by': 'assignee_id'}"/>
+                    <filter string="Status"   name="group_status"   context="{'group_by':'status'}"/>
+                    <filter string="Severity" name="group_severity" context="{'group_by':'severity'}"/>
+                    <filter string="Priority" name="group_priority" context="{'group_by':'priority'}"/>
+                    <filter string="Feature"  name="group_feature"  context="{'group_by':'feature_area'}"/>
+                    <filter string="Branch"   name="group_branch"   context="{'group_by':'ci_branch'}"/>
+                    <filter string="Source"   name="group_source"   context="{'group_by':'source'}"/>
+                    <filter string="Assignee" name="group_assignee" context="{'group_by':'assignee_id'}"/>
                 </group>
             </search>
         </field>

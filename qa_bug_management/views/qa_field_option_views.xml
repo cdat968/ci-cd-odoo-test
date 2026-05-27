@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_qa_field_option_list" model="ir.ui.view">
+        <field name="name">qa.field.option.list</field>
+        <field name="model">qa.field.option</field>
+        <field name="arch" type="xml">
+            <list string="Field Options" editable="top" default_order="field_name, sequence">
+                <field name="field_name"/>
+                <field name="value"/>
+                <field name="label"/>
+                <field name="sequence"/>
+                <field name="description" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_qa_field_option_form" model="ir.ui.view">
+        <field name="name">qa.field.option.form</field>
+        <field name="model">qa.field.option</field>
+        <field name="arch" type="xml">
+            <form string="Field Option">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="field_name"/>
+                            <field name="value"/>
+                            <field name="label"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Tooltip / explanation shown to users..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_qa_field_option_search" model="ir.ui.view">
+        <field name="name">qa.field.option.search</field>
+        <field name="model">qa.field.option</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="field_name"/>
+                <field name="label"/>
+                <group string="Group By">
+                    <filter string="Field" name="group_field" context="{'group_by': 'field_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_qa_field_option" model="ir.actions.act_window">
+        <field name="name">Field Options</field>
+        <field name="res_model">qa.field.option</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_field': 1}</field>
+    </record>
+
+</odoo>

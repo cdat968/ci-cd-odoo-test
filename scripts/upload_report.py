@@ -10,8 +10,8 @@ Usage (from CI):
         --created-by ci-bot
 
 Required env vars:
-    BACKEND_URL               — base URL of the webapp (e.g. https://xxx.vercel.app)
-    COMPONENT_A_PIPELINE_KEY  — value for the X-Pipeline-Key header
+    ODOO_URL   — base URL of the Odoo server (e.g. https://xxx.trycloudflare.com)
+    QA_CI_KEY  — value for the X-CI-Key header
 
 Optional env vars:
     CLOUDINARY_URL            — cloudinary://key:secret@cloud_name
@@ -266,26 +266,32 @@ def _parse_html_report(html: str) -> dict:
 
 
 def _post_report(
-    backend_url: str,
-    pipeline_key: str,
+    odoo_url: str,
+    ci_key: str,
     title: str,
     html: str,
     structured_payload: dict,
     created_by: str,
+    ci_commit_sha: str = '',
+    ci_branch: str = '',
+    ci_run_url: str = '',
 ) -> str:
     """
-    POST the report to BACKEND_URL/api/reports and return the share_url.
+    POST the report to Odoo /qa/ci/report and return the share_url.
     Raises on HTTP or network errors.
     """
     import urllib.request
 
-    url = backend_url.rstrip("/") + "/api/reports"
+    url = odoo_url.rstrip("/") + "/qa/ci/report"
     payload = json.dumps(
         {
             "title": title,
             "html": html,
             "payload": structured_payload,
-            "created_by": created_by,
+            "reporter": created_by,
+            "ci_commit_sha": ci_commit_sha,
+            "ci_branch": ci_branch,
+            "ci_run_url": ci_run_url,
         }
     ).encode("utf-8")
 
@@ -294,7 +300,7 @@ def _post_report(
         data=payload,
         headers={
             "Content-Type": "application/json",
-            "X-Pipeline-Key": pipeline_key,
+            "X-CI-Key": ci_key,
         },
         method="POST",
     )
@@ -306,7 +312,8 @@ def _post_report(
     data = json.loads(body)
     share_url: str = data.get("share_url", "")
     if not share_url:
-        raise ValueError(f"API response did not contain 'share_url'. Response: {body}")
+        _err(f"WARNING: Odoo response has no share_url. Response: {body}")
+        share_url = f"{odoo_url.rstrip('/')}/web#model=qa.report&id={data.get('id', '')}"
     return share_url
 
 
@@ -333,16 +340,16 @@ def main() -> None:
     args = parser.parse_args()
 
     # ---- Validate required env vars ----------------------------------------
-    backend_url = os.environ.get("BACKEND_URL", "").strip()
-    pipeline_key = os.environ.get("COMPONENT_A_PIPELINE_KEY", "").strip()
+    odoo_url = os.environ.get("ODOO_URL", "").strip()
+    ci_key = os.environ.get("QA_CI_KEY", "").strip()
     cloudinary_url = os.environ.get("CLOUDINARY_URL", "").strip()
 
-    if not backend_url:
-        _err("ERROR: BACKEND_URL environment variable is not set.")
+    if not odoo_url:
+        _err("ERROR: ODOO_URL environment variable is not set.")
         sys.exit(0)
 
-    if not pipeline_key:
-        _err("ERROR: COMPONENT_A_PIPELINE_KEY environment variable is not set.")
+    if not ci_key:
+        _err("ERROR: QA_CI_KEY environment variable is not set.")
         sys.exit(0)
 
     # ---- Read HTML ---------------------------------------------------------
@@ -371,15 +378,18 @@ def main() -> None:
     # ---- Parse structured data from HTML -----------------------------------
     structured_payload = _parse_html_report(html_content)
 
-    # ---- POST to webapp ----------------------------------------------------
+    # ---- POST to Odoo ------------------------------------------------------
     try:
         share_url = _post_report(
-            backend_url=backend_url,
-            pipeline_key=pipeline_key,
+            odoo_url=odoo_url,
+            ci_key=ci_key,
             title=args.title,
             html=html_content,
             structured_payload=structured_payload,
             created_by=args.created_by,
+            ci_commit_sha=os.environ.get("CI_COMMIT_SHA", ""),
+            ci_branch=os.environ.get("CI_BRANCH", os.environ.get("GITHUB_REF_NAME", "")),
+            ci_run_url=os.environ.get("CI_RUN_URL", os.environ.get("GITHUB_SERVER_URL", "")),
         )
         # ONLY this line goes to stdout.
         print(share_url)
