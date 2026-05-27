@@ -50,3 +50,7 @@ class TestQaBugTicket(TransactionCase):
         ticket = self.env['qa.bug.ticket'].create({'title': 'In progress'})
         ticket.write({'status': 'in_progress'})
         self.assertFalse(ticket.resolved_at)
+
+    def test_intentional_failure_delete_me(self):
+        """Intentional fail to test CI → Odoo report pipeline."""
+        self.assertEqual(1, 2, "This failure is intentional — delete after testing")
