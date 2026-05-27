@@ -16,8 +16,32 @@ export interface ReportPayload {
 
 export interface BugRecord {
   id: string;
-  title: string;
-  [key: string]: unknown;
+  summary: string;
+  description: string;
+  steps: string[];
+  expected: string;
+  observed: string;
+  build: string;
+  reproducibility: string;
+  severity: string;
+  frequency: string;
+  priority: string;
+  keyword: string;
+  status: string;
+  resolution: string;
+  note: string;
+  suggestedFix: string;
+  feature: string;
+  createdAt: string;
+  evidence: { src: string; title: string }[];
+}
+
+export interface ReportMeta {
+  project_name: string;
+  report_date: string;
+  total_bugs: number;
+  open_bugs: number;
+  high_priority_count: number;
 }
 
 export interface TestCase {

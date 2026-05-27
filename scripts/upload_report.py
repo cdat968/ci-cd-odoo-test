@@ -134,11 +134,143 @@ def _upload_images_to_cloudinary(
     return html
 
 
+def _extract_js_block(html: str, var_name: str) -> str | None:
+    """
+    Extract the JavaScript object assigned to *var_name* from a script block.
+    Uses brace counting to find the matching closing brace so nested objects
+    and arrays are handled correctly.
+    """
+    marker = f"const {var_name} = {{"
+    start = html.find(marker)
+    if start == -1:
+        return None
+
+    brace_start = start + len(marker) - 1  # index of the opening {
+    depth = 0
+    in_string = False
+    i = brace_start
+    n = len(html)
+
+    while i < n:
+        ch = html[i]
+        if in_string:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == '"':
+                in_string = False
+        else:
+            if ch == '"':
+                in_string = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return html[brace_start : i + 1]
+        i += 1
+    return None
+
+
+def _js_to_json(js: str) -> str:
+    """
+    Convert a JavaScript object literal to valid JSON.
+
+    Strategy:
+    1. Temporarily replace all double-quoted string literals with placeholders
+       so that `:` and identifier characters inside strings are invisible to
+       subsequent transformations.
+    2. Quote any remaining unquoted identifier keys (e.g. `id:` → `"id":`).
+    3. Remove trailing commas before `}` or `]` (not valid JSON).
+    4. Restore the original string literals.
+    """
+    placeholders: dict[str, str] = {}
+    counter = [0]
+
+    def _store(m: re.Match) -> str:
+        key = f'"__S{counter[0]}__"'
+        placeholders[key] = m.group(0)
+        counter[0] += 1
+        return key
+
+    # Step 1: protect all double-quoted strings (handles \" escapes).
+    protected = re.sub(r'"(?:[^"\\]|\\.)*"', _store, js)
+
+    # Step 2: quote unquoted identifier keys.
+    protected = re.sub(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*:", r'"\1":', protected)
+
+    # Step 3: strip trailing commas.
+    protected = re.sub(r",(\s*[}\]])", r"\1", protected)
+
+    # Step 4: restore strings.
+    for placeholder, original in placeholders.items():
+        protected = protected.replace(placeholder, original)
+
+    return protected
+
+
+def _parse_html_report(html: str) -> dict:
+    """
+    Extract structured bug data and metadata from an HTML report.
+
+    Returns::
+
+        {
+            "bugs": [ { id, summary, steps, ... , evidence: [{src, title}] }, … ],
+            "metadata": {
+                "project_name": str,
+                "report_date": str,
+                "total_bugs": int,
+                "open_bugs": int,
+                "high_priority_count": int,
+            },
+        }
+
+    Returns ``{"bugs": [], "metadata": {}}`` if the expected JS block is not found.
+    """
+    js_block = _extract_js_block(html, "bugTickets")
+    if not js_block:
+        _err("WARNING: 'bugTickets' JS object not found in HTML — payload will be empty.")
+        return {"bugs": [], "metadata": {}}
+
+    try:
+        json_text = _js_to_json(js_block)
+        data: dict = json.loads(json_text)
+    except Exception as exc:
+        _err(f"WARNING: Failed to parse bugTickets: {exc} — payload will be empty.")
+        return {"bugs": [], "metadata": {}}
+
+    bugs: list[dict] = list(data.values())
+    _err(f"INFO: Parsed {len(bugs)} bug(s) from HTML.")
+
+    # Extract metadata from HTML.
+    h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.IGNORECASE | re.DOTALL)
+    project_name = re.sub(r"<[^>]+>", "", h1_match.group(1)).strip() if h1_match else ""
+
+    today_match = re.search(r'const reportToday\s*=\s*"([^"]+)"', html)
+    report_date = today_match.group(1) if today_match else ""
+
+    open_bugs = sum(1 for b in bugs if b.get("status") == "New")
+    high_priority = sum(1 for b in bugs if "P2" in str(b.get("priority", "")))
+
+    return {
+        "bugs": bugs,
+        "metadata": {
+            "project_name": project_name,
+            "report_date": report_date,
+            "total_bugs": len(bugs),
+            "open_bugs": open_bugs,
+            "high_priority_count": high_priority,
+        },
+    }
+
+
 def _post_report(
     backend_url: str,
     pipeline_key: str,
     title: str,
     html: str,
+    structured_payload: dict,
     created_by: str,
 ) -> str:
     """
@@ -152,7 +284,7 @@ def _post_report(
         {
             "title": title,
             "html": html,
-            "payload": {},
+            "payload": structured_payload,
             "created_by": created_by,
         }
     ).encode("utf-8")
@@ -236,6 +368,9 @@ def main() -> None:
     else:
         _err("INFO: CLOUDINARY_URL not set — skipping image upload.")
 
+    # ---- Parse structured data from HTML -----------------------------------
+    structured_payload = _parse_html_report(html_content)
+
     # ---- POST to webapp ----------------------------------------------------
     try:
         share_url = _post_report(
@@ -243,6 +378,7 @@ def main() -> None:
             pipeline_key=pipeline_key,
             title=args.title,
             html=html_content,
+            structured_payload=structured_payload,
             created_by=args.created_by,
         )
         # ONLY this line goes to stdout.
