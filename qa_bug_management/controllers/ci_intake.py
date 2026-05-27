@@ -32,6 +32,24 @@ def _normalize_priority(val: str) -> str:
     return mapping.get((val or '').lower(), 'p3_medium')
 
 
+def _normalize_frequency(val: str) -> str | None:
+    mapping = {
+        'everytime': 'everytime', 'every time': 'everytime',
+        'sometimes': 'sometimes',
+        'hardly':    'hardly',
+    }
+    return mapping.get((val or '').lower(), None)
+
+
+def _normalize_reproducibility(val: str) -> str | None:
+    mapping = {
+        'always':       'always',
+        'intermittent': 'intermittent',
+        'once':         'once',
+    }
+    return mapping.get((val or '').lower(), None)
+
+
 def _normalize_status(val: str) -> str:
     mapping = {
         'new': 'new', 'assigned': 'assigned',
@@ -147,8 +165,8 @@ class CiIntakeController(http.Controller):
                 'keyword': bug.get('keyword', ''),
                 'severity': _normalize_severity(bug.get('severity', '')),
                 'priority': _normalize_priority(bug.get('priority', '')),
-                'frequency': bug.get('frequency', '') or None,
-                'reproducibility': bug.get('reproducibility', '') or None,
+                'frequency': _normalize_frequency(bug.get('frequency', '')),
+                'reproducibility': _normalize_reproducibility(bug.get('reproducibility', '')),
                 'status': _normalize_status(bug.get('status', 'new')),
                 'note': bug.get('note', ''),
                 'suggested_fix': bug.get('suggestedFix', ''),
