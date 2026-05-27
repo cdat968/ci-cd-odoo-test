@@ -25,7 +25,8 @@ def main():
     for failure in data.get('failures', []):
         payload = {
             'title': f"[CI] {failure['module']}.{failure['test']} failed",
-            'description': f"<pre>{failure.get('traceback', '')}</pre>",
+            'description': '',
+            'ci_error_log': f"<pre>{failure.get('traceback', '')}</pre>",
             'severity': 'high',
             'ci_run_url': args.run_url,
             'ci_commit_sha': args.commit,

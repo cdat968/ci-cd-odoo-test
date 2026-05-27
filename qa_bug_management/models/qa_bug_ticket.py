@@ -71,6 +71,8 @@ class QaBugTicket(models.Model):
     note = fields.Text(string='Note')
     suggested_fix = fields.Text(string='Suggested Fix')
 
+    ci_error_log = fields.Html(string='CI Error Log')
+
     # ── Source / traceability ─────────────────────────────────────
     source = fields.Selection([
         ('ci',          'CI/CD'),
