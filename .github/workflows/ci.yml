@@ -29,14 +29,17 @@ jobs:
           cat /tmp/odoo_test.log | python scripts/parse_odoo_test_log.py > /tmp/failures.json || true
           cat /tmp/failures.json
 
-      - name: Upload report to webapp
+      - name: Upload report to Odoo
         if: steps.odoo_test.outcome == 'failure'
         continue-on-error: true
         id: upload_report
         env:
-          BACKEND_URL: ${{ vars.COMPONENT_A_BASE_URL }}
-          COMPONENT_A_PIPELINE_KEY: ${{ secrets.COMPONENT_A_PIPELINE_KEY }}
+          ODOO_URL: ${{ secrets.ODOO_URL }}
+          QA_CI_KEY: ${{ secrets.QA_CI_KEY }}
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           pip install requests cloudinary
           SHARE_URL=$(python scripts/upload_report.py \
@@ -67,19 +70,20 @@ jobs:
   test-webapp:
     name: Next.js Webapp Health Check
     runs-on: ubuntu-latest
-    if: vars.COMPONENT_A_BASE_URL != ''
+    if: vars.BASE_URL != ''
     steps:
       - uses: actions/checkout@v4
 
       - name: Health check
         run: |
-          curl -f "${{ vars.COMPONENT_A_BASE_URL }}/api/health" \
+          curl -f "${{ vars.BASE_URL }}/api/health" \
             || (echo "Webapp health check failed" && exit 1)
 
-      - name: Smoke test — create + fetch report
+      - name: Smoke test — create + patch report
         env:
-          PIPELINE_KEY: ${{ secrets.COMPONENT_A_PIPELINE_KEY }}
-          BASE_URL: ${{ vars.COMPONENT_A_BASE_URL }}
+          ODOO_URL: ${{ secrets.ODOO_URL }}
+          QA_CI_KEY: ${{ secrets.QA_CI_KEY }}
+          BASE_URL: ${{ vars.BASE_URL }}
         run: |
           pip install requests
           python scripts/smoke_test_webapp.py
