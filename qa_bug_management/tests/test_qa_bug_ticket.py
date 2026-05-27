@@ -15,14 +15,14 @@ class TestQaBugTicket(TransactionCase):
         ticket.write({'status': 'fixed'})
         self.assertTrue(ticket.resolved_at)
 
-    def test_resolved_at_set_on_wont_fix(self):
+    def test_resolved_at_set_on_rejected(self):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Skip'})
-        ticket.write({'status': 'wont_fix'})
+        ticket.write({'status': 'rejected'})
         self.assertTrue(ticket.resolved_at)
 
-    def test_resolved_at_set_on_duplicate(self):
+    def test_resolved_at_set_on_closed(self):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Dupe'})
-        ticket.write({'status': 'duplicate'})
+        ticket.write({'status': 'closed'})
         self.assertTrue(ticket.resolved_at)
 
     def test_evidence_cascade_delete(self):
@@ -34,9 +34,9 @@ class TestQaBugTicket(TransactionCase):
         ticket.unlink()
         self.assertFalse(self.env['qa.bug.evidence'].browse(evidence_id).exists())
 
-    def test_default_severity_medium(self):
+    def test_default_severity_s3_minor(self):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Default severity'})
-        self.assertEqual(ticket.severity, 'critical')
+        self.assertEqual(ticket.severity, 's3_minor')
 
     def test_default_status_new(self):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Default status'})
