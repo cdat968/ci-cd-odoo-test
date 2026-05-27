@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_qa_evidence_upload_wizard_form" model="ir.ui.view">
+        <field name="name">qa.evidence.upload.wizard.form</field>
+        <field name="model">qa.evidence.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Upload Evidence Image">
+                <group>
+                    <field name="ticket_id" invisible="1"/>
+                    <field name="file_data" filename="file_name" required="1"/>
+                    <field name="file_name" invisible="1"/>
+                    <field name="caption" placeholder="Optional caption…"/>
+                </group>
+                <footer>
+                    <button string="Upload to Cloudinary" type="object"
+                            name="action_upload" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_qa_evidence_upload_wizard" model="ir.actions.act_window">
+        <field name="name">Upload Image</field>
+        <field name="res_model">qa.evidence.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

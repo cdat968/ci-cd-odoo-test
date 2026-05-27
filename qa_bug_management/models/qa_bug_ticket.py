@@ -112,3 +112,14 @@ class QaBugTicket(models.Model):
     def action_open_report(self):
         self.ensure_one()
         return {'type': 'ir.actions.act_url', 'url': self.report_share_url, 'target': 'new'}
+
+    def action_upload_evidence_image(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Upload Image',
+            'res_model': 'qa.evidence.upload.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_ticket_id': self.id},
+        }

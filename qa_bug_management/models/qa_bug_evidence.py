@@ -13,3 +13,4 @@ class QaBugEvidence(models.Model):
     ], required=True, default='screenshot')
     url = fields.Char(string='URL', required=True)
     caption = fields.Char(string='Caption')
+    cloudinary_public_id = fields.Char(string='Cloudinary ID')

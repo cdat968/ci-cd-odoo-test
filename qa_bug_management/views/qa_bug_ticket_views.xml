@@ -68,6 +68,12 @@
                             </group>
                         </page>
                         <page string="Evidence" name="evidence">
+                            <div class="mb-2">
+                                <button string="Upload Image" type="object"
+                                        name="action_upload_evidence_image"
+                                        class="btn btn-secondary btn-sm"
+                                        invisible="not id"/>
+                            </div>
                             <field name="evidence_ids">
                                 <list editable="bottom">
                                     <field name="kind"/>

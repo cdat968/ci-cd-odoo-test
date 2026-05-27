@@ -1,6 +1,13 @@
 import json
+import os
 from odoo import http
 from odoo.http import request
+
+
+def _ci_auth():
+    ci_key = request.httprequest.headers.get('X-CI-Key', '')
+    expected = os.environ.get('QA_CI_KEY', '')
+    return expected and ci_key == expected
 
 
 def _serialize_bug(ticket):
@@ -90,6 +97,17 @@ class ReportApiController(http.Controller):
             'resolution': ticket.resolution or '',
             'status': ticket.status or '',
         })
+
+    @http.route('/qa/api/report/<int:report_id>', type='http', auth='public',
+                methods=['DELETE'], csrf=False)
+    def delete_report(self, report_id, **kwargs):
+        if not _ci_auth():
+            return request.make_json_response({'error': 'Forbidden'}, status=403)
+        report = request.env['qa.report'].sudo().browse(report_id)
+        if not report.exists():
+            return request.make_json_response({'error': 'not found'}, status=404)
+        report.unlink()
+        return request.make_json_response({'status': 'deleted'})
 
     @http.route('/qa/api/field-options', type='http', auth='public',
                 methods=['GET'], csrf=False)

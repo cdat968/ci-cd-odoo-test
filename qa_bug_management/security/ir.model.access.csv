@@ -7,3 +7,5 @@ access_qa_field_option_user,qa.field.option.user,model_qa_field_option,group_qa_
 access_qa_field_option_manager,qa.field.option.manager,model_qa_field_option,group_qa_manager,1,1,1,1
 access_qa_report_user,qa.report.user,model_qa_report,group_qa_user,1,0,0,0
 access_qa_report_manager,qa.report.manager,model_qa_report,group_qa_manager,1,1,1,1
+access_qa_evidence_upload_wizard_user,qa.evidence.upload.wizard.user,model_qa_evidence_upload_wizard,group_qa_user,1,1,1,1
+access_qa_evidence_upload_wizard_manager,qa.evidence.upload.wizard.manager,model_qa_evidence_upload_wizard,group_qa_manager,1,1,1,1

@@ -121,6 +121,12 @@ class CiIntakeController(http.Controller):
             'html': data.get('html', ''),
         })
 
+        base_webapp_url = os.environ.get('BASE_WEBAPP_URL', '').rstrip('/')
+        share_url = (
+            f'{base_webapp_url}/r/{report.id}?t={report.share_token}'
+            if base_webapp_url else ''
+        )
+
         # Create qa.bug.ticket records linked to this report
         BugTicket = request.env['qa.bug.ticket'].sudo()
         Evidence = request.env['qa.bug.evidence'].sudo()
@@ -152,6 +158,7 @@ class CiIntakeController(http.Controller):
                 'ci_commit_sha': data.get('ci_commit_sha', ''),
                 'ci_branch': data.get('ci_branch', ''),
                 'reporter': data.get('reporter', 'ci-bot'),
+                'report_share_url': share_url,
             })
 
             for ev in (bug.get('evidence') or []):
@@ -161,12 +168,6 @@ class CiIntakeController(http.Controller):
                     'url': ev.get('src', ''),
                     'caption': ev.get('title', ''),
                 })
-
-        base_webapp_url = os.environ.get('BASE_WEBAPP_URL', '').rstrip('/')
-        share_url = (
-            f'{base_webapp_url}/r/{report.id}?t={report.share_token}'
-            if base_webapp_url else ''
-        )
 
         return request.make_json_response({
             'id': report.id,
