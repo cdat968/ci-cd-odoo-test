@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { verifyShareToken } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import ReportViewer from '@/components/ReportViewer';
+import { parseHtmlReport } from '@/lib/parseHtmlReport';
 import type { BugRecord, ReportMeta } from '@/types';
 
 type Props = {
@@ -31,7 +32,7 @@ export default async function ReportPage({ params, searchParams }: Props) {
   if (!valid) notFound();
 
   const [reportRows, patchRows] = await Promise.all([
-    sql`SELECT title, payload, share_token FROM report WHERE id = ${reportId}`,
+    sql`SELECT title, payload, html FROM report WHERE id = ${reportId}`,
     sql`SELECT bug_id, note, resolution, status FROM bug_patch WHERE report_id = ${reportId}`,
   ]);
 
@@ -40,14 +41,22 @@ export default async function ReportPage({ params, searchParams }: Props) {
   const row = reportRows[0];
   const title = row.title as string;
   const rawPayload = row.payload as { bugs?: BugRecord[]; metadata?: ReportMeta } | null;
-  const bugs: BugRecord[] = rawPayload?.bugs ?? [];
-  const metadata: ReportMeta = rawPayload?.metadata ?? {
+
+  let bugs: BugRecord[] = rawPayload?.bugs ?? [];
+  let metadata: ReportMeta = rawPayload?.metadata ?? {
     project_name: title,
     report_date: '',
-    total_bugs: bugs.length,
-    open_bugs: bugs.filter(b => b.status !== 'Fixed').length,
-    high_priority_count: bugs.filter(b => b.priority?.includes('P2')).length,
+    total_bugs: 0,
+    open_bugs: 0,
+    high_priority_count: 0,
   };
+
+  // Legacy reports uploaded before Phase 1: payload is empty, parse HTML on-the-fly.
+  if (bugs.length === 0 && row.html) {
+    const parsed = parseHtmlReport(row.html as string);
+    bugs = parsed.bugs;
+    metadata = parsed.metadata.project_name ? parsed.metadata : { ...parsed.metadata, project_name: title };
+  }
 
   // Merge bug_patch overrides (note, resolution, status) into bug data.
   const patches = patchRows as unknown as { bug_id: string; note: string | null; resolution: string | null; status: string | null }[];
@@ -62,17 +71,6 @@ export default async function ReportPage({ params, searchParams }: Props) {
       ...(patch.status !== null && { status: patch.status }),
     };
   });
-
-  // Fallback to iframe for reports uploaded before structured payload existed.
-  if (mergedBugs.length === 0) {
-    const htmlUrl = `/api/reports/${reportId}/html?t=${encodeURIComponent(token ?? '')}`;
-    return (
-      <>
-        <title>{title}</title>
-        <iframe src={htmlUrl} title={title} style={{ width: '100%', height: '100vh', border: 'none' }} />
-      </>
-    );
-  }
 
   return (
     <ReportViewer
