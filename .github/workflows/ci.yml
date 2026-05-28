@@ -40,6 +40,14 @@ jobs:
           END_TS=$(date +%s)
           echo "OCA Helpdesk smoke tests step took $((END_TS - START_TS))s"
 
+      - name: Run QA Helpdesk bridge tests
+        run: |
+          set -o pipefail
+          START_TS=$(date +%s)
+          bash scripts/run_qa_helpdesk_bridge_tests.sh 2>&1 | tee /tmp/qa_helpdesk_bridge.log
+          END_TS=$(date +%s)
+          echo "QA Helpdesk bridge tests step took $((END_TS - START_TS))s"
+
       - name: Run Odoo tests
         run: |
           set -o pipefail

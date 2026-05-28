@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="qa_bug_ticket_view_form_helpdesk_bridge" model="ir.ui.view">
+        <field name="name">qa.bug.ticket.form.helpdesk.bridge</field>
+        <field name="model">qa.bug.ticket</field>
+        <field name="inherit_id" ref="qa_bug_management.view_qa_bug_ticket_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button string="Open Helpdesk Ticket"
+                        name="action_open_helpdesk_ticket"
+                        type="object"
+                        invisible="not helpdesk_ticket_id"/>
+            </xpath>
+            <xpath expr="//field[@name='component_a_bug_id']" position="after">
+                <field name="helpdesk_ticket_id" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

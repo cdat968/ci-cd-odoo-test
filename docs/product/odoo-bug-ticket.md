@@ -20,6 +20,9 @@ so the QA Lead can triage it from the same UI used for manual bugs.
   model until a bridge story explicitly links it with `helpdesk.ticket`.
 - CI includes a test-only addon, `qa_helpdesk_smoke_tests`, to prove OCA
   Helpdesk and `qa_bug_management` can install in the same Odoo database.
+- `qa_helpdesk_bridge` provides a manual bridge from `helpdesk.ticket` to
+  `qa.bug.ticket`: QA creates the bug with a button, the link is stored both
+  ways, and existing links open rather than creating duplicates.
 
 ## Module layout
 

@@ -8,9 +8,9 @@ Hệ thống gồm 2 component song song:
 - **Component B** — Odoo Bug Ticket System (Odoo 18 Community + custom module): nơi quản lý bug ticket tự động từ CI/CD
 
 OCA Helpdesk 18.0 đã được vendor bước đầu trong repo để chuẩn bị tích hợp
-luồng customer support sau này. Phase hiện tại chỉ đưa addon vào source và
-`addons-path`; chưa tạo bridge giữa `helpdesk.ticket`, `qa.bug.ticket`, và
-`project.task`.
+luồng customer support. Bridge hiện tại cho phép QA tạo/link `qa.bug.ticket`
+thủ công từ `helpdesk.ticket`; chưa auto sync status, chưa copy attachment,
+và chưa auto tạo `project.task`.
 
 ---
 
@@ -361,6 +361,7 @@ qa-system/
 │   │   └── test_ci_intake.py
 │   └── __manifest__.py
 ├── qa_helpdesk_smoke_tests/        ← CI-only same-DB smoke tests
+├── qa_helpdesk_bridge/             ← Manual Helpdesk ↔ QA Bug bridge
 ├── addons_oca/
 │   └── helpdesk/                   ← Vendored OCA Helpdesk 18.0 slice
 │       ├── helpdesk_mgmt/
@@ -371,6 +372,7 @@ qa-system/
 │   ├── upload_report.py            ← Upload HTML report lên webapp
 │   ├── report_ci_failure.py        ← POST failures lên Odoo
 │   ├── run_oca_helpdesk_smoke_tests.sh
+│   ├── run_qa_helpdesk_bridge_tests.sh
 │   └── verify_oca_helpdesk_vendor.py
 ├── webapp/                         ← Next.js Component A
 │   ├── app/
