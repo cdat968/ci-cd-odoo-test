@@ -1,3 +1,4 @@
+from markupsafe import Markup
 from odoo import models, fields, api
 
 
@@ -88,9 +89,39 @@ class QaBugTicket(models.Model):
     # ── Relations ─────────────────────────────────────────────────
     report_id = fields.Many2one('qa.report', string='Report', ondelete='cascade', index=True)
     evidence_ids = fields.One2many('qa.bug.evidence', 'ticket_id', string='Evidence')
+    evidence_gallery_html = fields.Html(
+        compute='_compute_evidence_gallery_html', sanitize=False
+    )
     assignee_id = fields.Many2one('res.users', string='Assignee', tracking=True)
     reporter = fields.Char(string='Reporter', default='ci-bot')
     resolved_at = fields.Datetime(string='Resolved At', readonly=True)
+
+    @api.depends('evidence_ids.url', 'evidence_ids.caption', 'evidence_ids.kind')
+    def _compute_evidence_gallery_html(self):
+        for rec in self:
+            shots = rec.evidence_ids.filtered(lambda e: e.kind == 'screenshot' and e.url)
+            if not shots:
+                rec.evidence_gallery_html = Markup(
+                    '<p class="text-muted fst-italic">No evidence images attached.</p>'
+                )
+                continue
+            cards = []
+            for ev in shots:
+                url     = (ev.url     or '').replace('"', '%22')
+                caption = (ev.caption or '').replace('<', '&lt;').replace('>', '&gt;')
+                cards.append(Markup(
+                    f'<div class="qa-evidence-card">'
+                    f'<div class="qa-evidence-thumb">'
+                    f'<img src="{url}" alt="{caption}" loading="lazy"/>'
+                    f'</div>'
+                    f'<div class="qa-evidence-caption">{caption}</div>'
+                    f'</div>'
+                ))
+            rec.evidence_gallery_html = Markup(
+                '<div class="qa-evidence-gallery"><div class="qa-evidence-grid">'
+                + ''.join(cards)
+                + '</div></div>'
+            )
 
     @api.model_create_multi
     def create(self, vals_list):

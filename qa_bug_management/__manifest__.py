@@ -15,6 +15,12 @@
         'views/qa_evidence_upload_wizard_views.xml',
         'views/qa_bug_ticket_menu.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'qa_bug_management/static/src/css/evidence_gallery.css',
+            'qa_bug_management/static/src/js/evidence_lightbox.js',
+        ],
+    },
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

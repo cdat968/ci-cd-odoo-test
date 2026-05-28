@@ -13,10 +13,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache pip downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('pipeline/requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Pull Docker images
+        run: |
+          START_TS=$(date +%s)
+          docker compose -f docker-compose.test.yml pull
+          END_TS=$(date +%s)
+          echo "Docker image pull took $((END_TS - START_TS))s"
+
       - name: Run Odoo tests
         run: |
           set -o pipefail
+          START_TS=$(date +%s)
+          set +e
           bash scripts/run_odoo_tests.sh 2>&1 | tee /tmp/odoo_test.log
+          TEST_EXIT=${PIPESTATUS[0]}
+          set -e
+          END_TS=$(date +%s)
+          echo "Run Odoo tests step took $((END_TS - START_TS))s"
+          exit "$TEST_EXIT"
         continue-on-error: true
         id: odoo_test
 

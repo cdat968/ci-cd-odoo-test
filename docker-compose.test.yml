@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: ci_test
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U odoo"]
-      interval: 5s
+      interval: 1s
       timeout: 5s
       retries: 10
 
@@ -29,7 +29,7 @@ services:
       -d ci_test
       -i qa_bug_management
       --test-enable
-      --test-tags qa_bug_management
+      --test-tags /qa_bug_management
       --stop-after-init
       --log-level=test
       --addons-path=/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
