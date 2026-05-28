@@ -360,6 +360,7 @@ qa-system/
 │   │   ├── test_qa_bug_ticket.py
 │   │   └── test_ci_intake.py
 │   └── __manifest__.py
+├── qa_helpdesk_smoke_tests/        ← CI-only same-DB smoke tests
 ├── addons_oca/
 │   └── helpdesk/                   ← Vendored OCA Helpdesk 18.0 slice
 │       ├── helpdesk_mgmt/
@@ -369,6 +370,7 @@ qa-system/
 │   ├── parse_odoo_test_log.py      ← Parse Odoo log → failures.json
 │   ├── upload_report.py            ← Upload HTML report lên webapp
 │   ├── report_ci_failure.py        ← POST failures lên Odoo
+│   ├── run_oca_helpdesk_smoke_tests.sh
 │   └── verify_oca_helpdesk_vendor.py
 ├── webapp/                         ← Next.js Component A
 │   ├── app/

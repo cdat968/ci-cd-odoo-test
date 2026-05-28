@@ -32,6 +32,14 @@ jobs:
         run: |
           python scripts/verify_oca_helpdesk_vendor.py
 
+      - name: Run OCA Helpdesk smoke tests
+        run: |
+          set -o pipefail
+          START_TS=$(date +%s)
+          bash scripts/run_oca_helpdesk_smoke_tests.sh 2>&1 | tee /tmp/oca_helpdesk_smoke.log
+          END_TS=$(date +%s)
+          echo "OCA Helpdesk smoke tests step took $((END_TS - START_TS))s"
+
       - name: Run Odoo tests
         run: |
           set -o pipefail

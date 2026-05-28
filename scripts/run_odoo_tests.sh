@@ -13,7 +13,7 @@ trap cleanup EXIT
 
 echo "Starting Odoo test environment..."
 set +e
-docker compose -f "$COMPOSE_FILE" up --abort-on-container-exit --exit-code-from odoo
+docker compose -f "$COMPOSE_FILE" up --abort-on-container-exit --exit-code-from odoo odoo
 EXIT_CODE=$?
 set -e
 END_TS=$(date +%s)

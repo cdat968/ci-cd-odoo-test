@@ -23,6 +23,7 @@ services:
       PASSWORD: odoo
     volumes:
       - ./qa_bug_management:/mnt/extra-addons/qa_bug_management:ro
+      - ./qa_helpdesk_smoke_tests:/mnt/extra-addons/qa_helpdesk_smoke_tests:ro
       - ./addons_oca/helpdesk:/mnt/oca-helpdesk:ro
     command: >
       odoo
@@ -31,6 +32,30 @@ services:
       -i qa_bug_management
       --test-enable
       --test-tags /qa_bug_management
+      --stop-after-init
+      --log-level=test
+      --addons-path=/mnt/extra-addons,/mnt/oca-helpdesk,/usr/lib/python3/dist-packages/odoo/addons
+
+  odoo_helpdesk_smoke:
+    image: odoo:18.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    volumes:
+      - ./qa_bug_management:/mnt/extra-addons/qa_bug_management:ro
+      - ./qa_helpdesk_smoke_tests:/mnt/extra-addons/qa_helpdesk_smoke_tests:ro
+      - ./addons_oca/helpdesk:/mnt/oca-helpdesk:ro
+    command: >
+      odoo
+      --db_host=db --db_user=odoo --db_password=odoo
+      -d ci_test
+      -i qa_helpdesk_smoke_tests
+      --test-enable
+      --test-tags /qa_helpdesk_smoke_tests
       --stop-after-init
       --log-level=test
       --addons-path=/mnt/extra-addons,/mnt/oca-helpdesk,/usr/lib/python3/dist-packages/odoo/addons
