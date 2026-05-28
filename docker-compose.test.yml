@@ -23,6 +23,7 @@ services:
       PASSWORD: odoo
     volumes:
       - ./qa_bug_management:/mnt/extra-addons/qa_bug_management:ro
+      - ./addons_oca/helpdesk:/mnt/oca-helpdesk:ro
     command: >
       odoo
       --db_host=db --db_user=odoo --db_password=odoo
@@ -32,4 +33,4 @@ services:
       --test-tags /qa_bug_management
       --stop-after-init
       --log-level=test
-      --addons-path=/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
+      --addons-path=/mnt/extra-addons,/mnt/oca-helpdesk,/usr/lib/python3/dist-packages/odoo/addons

@@ -7,6 +7,11 @@ Hệ thống gồm 2 component song song:
 - **Component A** — QA Report Web Platform (Next.js trên Vercel): nơi lưu trữ và chia sẻ HTML report
 - **Component B** — Odoo Bug Ticket System (Odoo 18 Community + custom module): nơi quản lý bug ticket tự động từ CI/CD
 
+OCA Helpdesk 18.0 đã được vendor bước đầu trong repo để chuẩn bị tích hợp
+luồng customer support sau này. Phase hiện tại chỉ đưa addon vào source và
+`addons-path`; chưa tạo bridge giữa `helpdesk.ticket`, `qa.bug.ticket`, và
+`project.task`.
+
 ---
 
 ## 2. Workflow hệ thống
@@ -355,11 +360,16 @@ qa-system/
 │   │   ├── test_qa_bug_ticket.py
 │   │   └── test_ci_intake.py
 │   └── __manifest__.py
+├── addons_oca/
+│   └── helpdesk/                   ← Vendored OCA Helpdesk 18.0 slice
+│       ├── helpdesk_mgmt/
+│       └── helpdesk_mgmt_project/
 ├── scripts/
 │   ├── run_odoo_tests.sh           ← Chạy Docker test
 │   ├── parse_odoo_test_log.py      ← Parse Odoo log → failures.json
 │   ├── upload_report.py            ← Upload HTML report lên webapp
-│   └── report_ci_failure.py        ← POST failures lên Odoo
+│   ├── report_ci_failure.py        ← POST failures lên Odoo
+│   └── verify_oca_helpdesk_vendor.py
 ├── webapp/                         ← Next.js Component A
 │   ├── app/
 │   │   ├── api/reports/            ← POST tạo report

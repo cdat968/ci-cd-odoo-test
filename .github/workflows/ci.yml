@@ -28,6 +28,10 @@ jobs:
           END_TS=$(date +%s)
           echo "Docker image pull took $((END_TS - START_TS))s"
 
+      - name: Verify vendored OCA Helpdesk addons
+        run: |
+          python scripts/verify_oca_helpdesk_vendor.py
+
       - name: Run Odoo tests
         run: |
           set -o pipefail

@@ -15,6 +15,9 @@ so the QA Lead can triage it from the same UI used for manual bugs.
 - Component B's CI is the system under test for Component A: it runs Odoo
   Python tests (module integrity, model invariants) and Component A smoke
   tests (`/api/health`, share link round-trip).
+- OCA Helpdesk 18.0 is vendored as an integration candidate through
+  `addons_oca/helpdesk`, but `qa.bug.ticket` remains the active QA/CI defect
+  model until a bridge story explicitly links it with `helpdesk.ticket`.
 
 ## Module layout
 
