@@ -4,9 +4,9 @@ Test records are always deleted after the run (pass or fail).
 """
 import os, json, requests, sys
 
-ODOO_URL  = os.environ['ODOO_URL'].rstrip('/')
+ODOO_URL  = os.environ['ODOO_URL'].strip().rstrip('/')
 QA_CI_KEY = os.environ['QA_CI_KEY']
-BASE_URL  = os.environ['BASE_URL'].rstrip('/')
+BASE_URL  = os.environ['BASE_URL'].strip().rstrip('/')
 
 
 def main():

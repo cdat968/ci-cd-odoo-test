@@ -18,23 +18,28 @@ export async function PATCH(
 
   const body = (await req.json()) as PatchPayload;
 
-  const odooUrl = process.env.ODOO_URL?.replace(/\/$/, '');
+  const odooUrl = process.env.ODOO_URL?.trim().replace(/\/+$/, '');
   if (!odooUrl) {
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
   }
 
-  const res = await fetch(
-    `${odooUrl}/qa/api/report/bug/${token}/${bugId}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        note: body.note ?? null,
-        resolution: body.resolution ?? null,
-        status: body.resolution === 'Fixed' ? 'closed' : null,
-      }),
-    },
-  );
+  let res: Response;
+  try {
+    res = await fetch(
+      `${odooUrl}/qa/api/report/bug/${token}/${bugId}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          note: body.note ?? null,
+          resolution: body.resolution ?? null,
+          status: body.resolution === 'fixed' ? 'closed' : null,
+        }),
+      },
+    );
+  } catch {
+    return NextResponse.json({ error: 'Odoo relay unavailable' }, { status: 502 });
+  }
 
   if (!res.ok) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
