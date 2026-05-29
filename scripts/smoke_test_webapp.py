@@ -46,6 +46,9 @@ def main():
             json={'note': 'smoke test note', 'resolution': 'fixed', 'updated_by': 'ci'},
             timeout=30,
         )
+        if not r2.ok:
+            print(f'PATCH via NextJS relay failed: {r2.status_code}', file=sys.stderr)
+            print(r2.text[:2000], file=sys.stderr)
         r2.raise_for_status()
         print(f'PATCH via NextJS relay: OK')
 

@@ -42,8 +42,20 @@ export async function PATCH(
   }
 
   if (!res.ok) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const detail = await res.text().catch(() => '');
+    return NextResponse.json(
+      { error: 'Odoo relay rejected request', status: res.status, detail },
+      { status: res.status >= 500 ? 502 : res.status },
+    );
   }
 
-  return NextResponse.json(await res.json());
+  const text = await res.text();
+  try {
+    return NextResponse.json(JSON.parse(text));
+  } catch {
+    return NextResponse.json(
+      { error: 'Odoo relay returned invalid JSON', detail: text },
+      { status: 502 },
+    );
+  }
 }
