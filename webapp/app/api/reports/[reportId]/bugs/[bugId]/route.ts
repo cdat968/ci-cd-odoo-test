@@ -33,7 +33,7 @@ export async function PATCH(
         body: JSON.stringify({
           note: body.note ?? null,
           resolution: body.resolution ?? null,
-          status: body.resolution === 'fixed' ? 'closed' : null,
+          status: body.resolution === 'Fixed' ? 'closed' : null,
         }),
       },
     );
