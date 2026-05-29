@@ -9,8 +9,8 @@ Hệ thống gồm 2 component song song:
 
 OCA Helpdesk 18.0 đã được vendor bước đầu trong repo để chuẩn bị tích hợp
 luồng customer support. Bridge hiện tại cho phép QA tạo/link `qa.bug.ticket`
-thủ công từ `helpdesk.ticket`; chưa auto sync status, chưa copy attachment,
-và chưa auto tạo `project.task`.
+thủ công từ `helpdesk.ticket`, sau đó tạo/link `project.task` thủ công từ QA
+Bug; chưa auto sync status và chưa copy attachment/evidence.
 
 ---
 

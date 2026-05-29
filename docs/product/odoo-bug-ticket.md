@@ -23,6 +23,9 @@ so the QA Lead can triage it from the same UI used for manual bugs.
 - `qa_helpdesk_bridge` provides a manual bridge from `helpdesk.ticket` to
   `qa.bug.ticket`: QA creates the bug with a button, the link is stored both
   ways, and existing links open rather than creating duplicates.
+- The bridge also lets a QA Manager create one linked `project.task` from a QA
+  bug. Project forms expose a Bugs smart button and a Bugs tab when the project
+  has QA bugs.
 
 ## Module layout
 

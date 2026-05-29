@@ -25,6 +25,7 @@ class HelpdeskTicket(models.Model):
                 'source': 'manual',
                 'reporter': reporter,
                 'helpdesk_ticket_id': self.id,
+                'project_id': self.project_id.id,
             })
             self.sudo().qa_bug_id = bug.id
         return self.action_open_qa_bug()

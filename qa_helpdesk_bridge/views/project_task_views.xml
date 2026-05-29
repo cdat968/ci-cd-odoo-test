@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="project_task_view_form_qa_bug" model="ir.ui.view">
+        <field name="name">project.task.form.qa.bug</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button string="Open QA Bug"
+                        name="action_open_qa_bug"
+                        type="object"
+                        invisible="not qa_bug_id"
+                        groups="qa_bug_management.group_qa_user,qa_bug_management.group_qa_manager"/>
+            </xpath>
+            <xpath expr="//field[@name='project_id']" position="after">
+                <field name="qa_bug_id" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

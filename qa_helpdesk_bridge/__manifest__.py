@@ -12,6 +12,8 @@
     'data': [
         'views/helpdesk_ticket_views.xml',
         'views/qa_bug_ticket_views.xml',
+        'views/project_project_views.xml',
+        'views/project_task_views.xml',
     ],
     'installable': True,
     'application': False,
