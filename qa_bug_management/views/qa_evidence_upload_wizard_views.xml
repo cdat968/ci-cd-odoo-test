@@ -8,8 +8,10 @@
             <form string="Upload Evidence Image">
                 <group>
                     <field name="ticket_id" invisible="1"/>
-                    <field name="file_data" filename="file_name" required="1"/>
-                    <field name="file_name" invisible="1"/>
+                    <field name="attachment_ids"
+                           widget="many2many_binary"
+                           options="{'accepted_file_extensions': 'image/*'}"
+                           required="1"/>
                     <field name="caption" placeholder="Optional caption…"/>
                 </group>
                 <footer>

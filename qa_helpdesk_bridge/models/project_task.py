@@ -22,3 +22,20 @@ class ProjectTask(models.Model):
             'target': 'current',
         })
         return action
+
+    def _sync_qa_bug_assignee(self):
+        if self.env.context.get('skip_qa_bug_sync'):
+            return
+        if not self.env.user.has_group('qa_bug_management.group_qa_manager'):
+            return
+        for task in self.filtered('qa_bug_id'):
+            assignee = task.user_ids[:1]
+            task.qa_bug_id.with_context(skip_qa_task_sync=True).write({
+                'assignee_id': assignee.id if assignee else False,
+            })
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'user_ids' in vals:
+            self._sync_qa_bug_assignee()
+        return res

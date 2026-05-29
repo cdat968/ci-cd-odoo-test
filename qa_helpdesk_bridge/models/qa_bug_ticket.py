@@ -69,9 +69,13 @@ class QaBugTicket(models.Model):
         return self.action_open_project_task()
 
     def _sync_project_task_assignee(self):
+        if self.env.context.get('skip_qa_task_sync'):
+            return
         for bug in self.filtered('project_task_id'):
             user_ids = bug.assignee_id.ids if bug.assignee_id else []
-            bug.project_task_id.user_ids = [Command.set(user_ids)]
+            bug.project_task_id.with_context(skip_qa_bug_sync=True).user_ids = [
+                Command.set(user_ids)
+            ]
 
     def _auto_create_or_sync_project_task(self):
         for bug in self:
@@ -89,6 +93,7 @@ class QaBugTicket(models.Model):
         if (
             'assignee_id' in vals
             and self.env.user.has_group('qa_bug_management.group_qa_manager')
+            and not self.env.context.get('skip_qa_task_sync')
         ):
             self._auto_create_or_sync_project_task()
         return res

@@ -64,6 +64,27 @@ class TestHelpdeskBridge(TransactionCase):
         self.assertEqual(ticket.qa_bug_id.project_id, self.project)
         self.assertEqual(action['res_id'], ticket.qa_bug_id.id)
 
+    def test_create_qa_bug_from_assigned_helpdesk_ticket_creates_developer_task(self):
+        ticket = self._create_helpdesk_ticket()
+        ticket.with_user(self.qa_manager).write({'user_id': self.developer.id})
+
+        ticket.with_user(self.qa_manager).action_create_qa_bug()
+
+        self.assertEqual(ticket.qa_bug_id.assignee_id, self.developer)
+        self.assertTrue(ticket.qa_bug_id.project_task_id)
+        self.assertEqual(ticket.qa_bug_id.project_task_id.user_ids, self.developer)
+
+    def test_helpdesk_assignee_syncs_to_existing_qa_bug_and_project_task(self):
+        ticket = self._create_helpdesk_ticket()
+        ticket.action_create_qa_bug()
+        bug = ticket.qa_bug_id
+
+        ticket.with_user(self.qa_manager).write({'user_id': self.developer.id})
+
+        self.assertEqual(bug.assignee_id, self.developer)
+        self.assertTrue(bug.project_task_id)
+        self.assertEqual(bug.project_task_id.user_ids, self.developer)
+
     def test_create_qa_bug_links_helpdesk_attachments_as_typed_evidence(self):
         ticket = self._create_helpdesk_ticket()
         image_attachment = self.env['ir.attachment'].sudo().create({
@@ -202,6 +223,38 @@ class TestHelpdeskBridge(TransactionCase):
         bug.with_user(self.qa_manager).write({'assignee_id': other_developer.id})
 
         self.assertEqual(bug.project_task_id.user_ids, other_developer)
+
+    def test_project_task_assignee_syncs_back_to_qa_bug(self):
+        bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Task syncs back to bug',
+            'project_id': self.project.id,
+        })
+        bug.with_user(self.qa_manager).action_create_project_task()
+
+        bug.project_task_id.with_user(self.qa_manager).write({
+            'user_ids': [(6, 0, [self.developer.id])],
+        })
+
+        self.assertEqual(bug.assignee_id, self.developer)
+
+    def test_developer_opens_qa_bug_after_project_task_assignment(self):
+        bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Open bug from assigned task',
+            'project_id': self.project.id,
+        })
+        bug.with_user(self.qa_manager).action_create_project_task()
+        bug.project_task_id.with_user(self.qa_manager).write({
+            'user_ids': [(6, 0, [self.developer.id])],
+        })
+
+        action = bug.project_task_id.with_user(self.developer).action_open_qa_bug()
+
+        self.assertEqual(action['res_model'], 'qa.bug.ticket')
+        self.assertEqual(action['res_id'], bug.id)
+        self.assertEqual(
+            self.env['qa.bug.ticket'].with_user(self.developer).browse(bug.id).read(['name'])[0]['id'],
+            bug.id,
+        )
 
     def test_create_project_task_requires_project(self):
         bug = self.env['qa.bug.ticket'].sudo().create({

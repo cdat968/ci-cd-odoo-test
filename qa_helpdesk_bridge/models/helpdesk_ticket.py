@@ -26,10 +26,24 @@ class HelpdeskTicket(models.Model):
                 'reporter': reporter,
                 'helpdesk_ticket_id': self.id,
                 'project_id': self.project_id.id,
+                'assignee_id': self.user_id.id,
             })
             self._create_qa_bug_evidence_from_attachments(bug)
+            bug.with_user(self.env.user)._auto_create_or_sync_project_task()
             self.sudo().qa_bug_id = bug.id
         return self.action_open_qa_bug()
+
+    def _sync_qa_bug_assignee(self):
+        if not self.env.user.has_group('qa_bug_management.group_qa_manager'):
+            return
+        for ticket in self.filtered('qa_bug_id'):
+            ticket.qa_bug_id.write({'assignee_id': ticket.user_id.id or False})
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'user_id' in vals:
+            self._sync_qa_bug_assignee()
+        return res
 
     def _create_qa_bug_evidence_from_attachments(self, bug):
         for attachment in self.attachment_ids:
