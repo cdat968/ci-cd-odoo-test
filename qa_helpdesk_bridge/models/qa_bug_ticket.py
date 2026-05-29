@@ -48,6 +48,7 @@ class QaBugTicket(models.Model):
             raise AccessError(_('Only QA Managers can create project tasks from QA bugs.'))
 
         if self.project_task_id:
+            self._sync_project_task_assignee()
             return self.action_open_project_task()
 
         project = self._get_project_for_task()
@@ -66,6 +67,31 @@ class QaBugTicket(models.Model):
         task = self.env['project.task'].create(vals)
         self.project_task_id = task.id
         return self.action_open_project_task()
+
+    def _sync_project_task_assignee(self):
+        for bug in self.filtered('project_task_id'):
+            user_ids = bug.assignee_id.ids if bug.assignee_id else []
+            bug.project_task_id.user_ids = [Command.set(user_ids)]
+
+    def _auto_create_or_sync_project_task(self):
+        for bug in self:
+            if bug.project_task_id:
+                bug._sync_project_task_assignee()
+                continue
+            if not bug.assignee_id:
+                continue
+            project = bug._get_project_for_task()
+            if project:
+                bug.action_create_project_task()
+
+    def write(self, vals):
+        res = super().write(vals)
+        if (
+            'assignee_id' in vals
+            and self.env.user.has_group('qa_bug_management.group_qa_manager')
+        ):
+            self._auto_create_or_sync_project_task()
+        return res
 
     def action_open_project_task(self):
         self.ensure_one()

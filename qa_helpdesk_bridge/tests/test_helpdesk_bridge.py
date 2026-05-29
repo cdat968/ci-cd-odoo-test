@@ -64,7 +64,7 @@ class TestHelpdeskBridge(TransactionCase):
         self.assertEqual(ticket.qa_bug_id.project_id, self.project)
         self.assertEqual(action['res_id'], ticket.qa_bug_id.id)
 
-    def test_create_qa_bug_links_helpdesk_image_attachments_as_evidence(self):
+    def test_create_qa_bug_links_helpdesk_attachments_as_typed_evidence(self):
         ticket = self._create_helpdesk_ticket()
         image_attachment = self.env['ir.attachment'].sudo().create({
             'name': 'customer-screenshot.png',
@@ -73,7 +73,7 @@ class TestHelpdeskBridge(TransactionCase):
             'res_model': 'helpdesk.ticket',
             'res_id': ticket.id,
         })
-        self.env['ir.attachment'].sudo().create({
+        log_attachment = self.env['ir.attachment'].sudo().create({
             'name': 'customer-log.txt',
             'datas': base64.b64encode(b'not an image'),
             'mimetype': 'text/plain',
@@ -84,11 +84,23 @@ class TestHelpdeskBridge(TransactionCase):
         ticket.action_create_qa_bug()
 
         evidence = ticket.qa_bug_id.evidence_ids
-        self.assertEqual(len(evidence), 1)
-        self.assertEqual(evidence.attachment_id, image_attachment)
-        self.assertFalse(evidence.url)
+        self.assertEqual(len(evidence), 2)
+        self.assertTrue(image_attachment.access_token)
+        self.assertTrue(log_attachment.access_token)
+        self.assertEqual(
+            evidence.filtered(lambda ev: ev.attachment_id == image_attachment).kind,
+            'image/png',
+        )
+        self.assertEqual(
+            evidence.filtered(lambda ev: ev.attachment_id == log_attachment).kind,
+            'text/plain',
+        )
         self.assertIn(
-            f'/web/image/ir.attachment/{image_attachment.id}/datas',
+            f'/web/content/{image_attachment.id}?download=false&access_token={image_attachment.access_token}',
+            ticket.qa_bug_id.evidence_gallery_html,
+        )
+        self.assertNotIn(
+            f'/web/content/{log_attachment.id}?download=false&access_token={log_attachment.access_token}',
             ticket.qa_bug_id.evidence_gallery_html,
         )
 
@@ -162,6 +174,35 @@ class TestHelpdeskBridge(TransactionCase):
             1,
         )
 
+    def test_assigning_bug_auto_creates_project_task_for_developer(self):
+        bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Assign creates task',
+            'project_id': self.project.id,
+        })
+
+        bug.with_user(self.qa_manager).write({'assignee_id': self.developer.id})
+
+        self.assertTrue(bug.project_task_id)
+        self.assertEqual(bug.project_task_id.project_id, self.project)
+        self.assertEqual(bug.project_task_id.user_ids, self.developer)
+
+    def test_reassigning_bug_syncs_existing_project_task(self):
+        other_developer = new_test_user(
+            self.env,
+            login='phase4-other-developer',
+            groups='qa_bug_management.group_qa_user,project.group_project_user',
+        )
+        bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Reassign syncs task',
+            'project_id': self.project.id,
+            'assignee_id': self.developer.id,
+        })
+        bug.with_user(self.qa_manager).action_create_project_task()
+
+        bug.with_user(self.qa_manager).write({'assignee_id': other_developer.id})
+
+        self.assertEqual(bug.project_task_id.user_ids, other_developer)
+
     def test_create_project_task_requires_project(self):
         bug = self.env['qa.bug.ticket'].sudo().create({
             'title': 'Bug without project',
@@ -188,6 +229,54 @@ class TestHelpdeskBridge(TransactionCase):
 
         with self.assertRaises(AccessError):
             bug.with_user(self.customer).read(['name'])
+
+    def test_developer_reads_only_assigned_qa_bugs(self):
+        assigned_bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Assigned to developer',
+            'project_id': self.project.id,
+            'assignee_id': self.developer.id,
+        })
+        unassigned_bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Unassigned bug',
+            'project_id': self.project.id,
+        })
+        other_bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Assigned elsewhere',
+            'project_id': self.project.id,
+            'assignee_id': self.qa_manager.id,
+        })
+
+        visible = self.env['qa.bug.ticket'].with_user(self.developer).search([])
+
+        self.assertIn(assigned_bug, visible)
+        self.assertNotIn(unassigned_bug, visible)
+        self.assertNotIn(other_bug, visible)
+
+    def test_developer_reads_only_assigned_bug_evidence(self):
+        assigned_bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Assigned evidence',
+            'project_id': self.project.id,
+            'assignee_id': self.developer.id,
+        })
+        assigned_evidence = self.env['qa.bug.evidence'].sudo().create({
+            'ticket_id': assigned_bug.id,
+            'kind': 'image/png',
+            'url': 'https://example.com/assigned.png',
+        })
+        other_bug = self.env['qa.bug.ticket'].sudo().create({
+            'title': 'Hidden evidence',
+            'project_id': self.project.id,
+        })
+        other_evidence = self.env['qa.bug.evidence'].sudo().create({
+            'ticket_id': other_bug.id,
+            'kind': 'image/png',
+            'url': 'https://example.com/hidden.png',
+        })
+
+        visible = self.env['qa.bug.evidence'].with_user(self.developer).search([])
+
+        self.assertIn(assigned_evidence, visible)
+        self.assertNotIn(other_evidence, visible)
 
     def test_project_bug_counts_and_open_action(self):
         open_bug = self.env['qa.bug.ticket'].sudo().create({

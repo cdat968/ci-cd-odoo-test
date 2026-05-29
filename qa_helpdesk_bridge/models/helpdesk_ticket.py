@@ -32,13 +32,11 @@ class HelpdeskTicket(models.Model):
         return self.action_open_qa_bug()
 
     def _create_qa_bug_evidence_from_attachments(self, bug):
-        image_attachments = self.attachment_ids.filtered(
-            lambda attachment: (attachment.mimetype or '').startswith('image/')
-        )
-        for attachment in image_attachments:
+        for attachment in self.attachment_ids:
+            attachment.sudo().generate_access_token()
             self.env['qa.bug.evidence'].sudo().create({
                 'ticket_id': bug.id,
-                'kind': 'screenshot',
+                'kind': attachment.mimetype or 'application/octet-stream',
                 'attachment_id': attachment.id,
                 'caption': attachment.name or self.name,
             })

@@ -19,7 +19,7 @@ class ProjectProject(models.Model):
     )
 
     def _compute_qa_bug_counts(self):
-        grouped = self.env['qa.bug.ticket'].sudo()._read_group(
+        grouped = self.env['qa.bug.ticket']._read_group(
             [('project_id', 'in', self.ids)],
             ['project_id', 'status'],
             ['__count'],

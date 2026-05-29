@@ -15,9 +15,7 @@ def _serialize_bug(ticket):
     steps = [s.strip() for s in steps_raw.split('\n') if s.strip()]
     evidence = []
     for item in ticket.evidence_ids:
-        src = item.url
-        if not src and item.attachment_id:
-            src = f'/web/image/ir.attachment/{item.attachment_id.id}/datas'
+        src = item.get_image_url()
         evidence.append({'src': src or '', 'title': item.caption or ''})
     return {
         'id': ticket.component_a_bug_id or str(ticket.id),

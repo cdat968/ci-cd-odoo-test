@@ -105,7 +105,7 @@ class QaBugTicket(models.Model):
     def _compute_evidence_gallery_html(self):
         for rec in self:
             shots = rec.evidence_ids.filtered(
-                lambda e: e.kind == 'screenshot' and (e.url or e.attachment_id)
+                lambda e: e.is_image() and (e.url or e.attachment_id)
             )
             if not shots:
                 rec.evidence_gallery_html = Markup(
@@ -114,7 +114,7 @@ class QaBugTicket(models.Model):
                 continue
             cards = []
             for ev in shots:
-                source_url = ev.url or f'/web/image/ir.attachment/{ev.attachment_id.id}/datas'
+                source_url = ev.get_image_url()
                 url     = (source_url or '').replace('"', '%22')
                 caption = (ev.caption or '').replace('<', '&lt;').replace('>', '&gt;')
                 cards.append(Markup(

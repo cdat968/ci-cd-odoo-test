@@ -24,13 +24,35 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
-    <!-- Record rule: users see their own assignments + unassigned -->
+    <!-- Record rule: users see only their own assignments -->
     <record id="rule_qa_bug_ticket_user" model="ir.rule">
-        <field name="name">QA Bug Ticket: User sees own + unassigned</field>
+        <field name="name">QA Bug Ticket: User sees own assignments</field>
         <field name="model_id" ref="model_qa_bug_ticket"/>
         <field name="domain_force">
-            ['|', ('assignee_id', '=', False), ('assignee_id', '=', user.id)]
+            [('assignee_id', '=', user.id)]
         </field>
+        <field name="groups" eval="[(4, ref('group_qa_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_qa_bug_evidence_manager" model="ir.rule">
+        <field name="name">QA Bug Evidence: Manager sees all</field>
+        <field name="model_id" ref="model_qa_bug_evidence"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_qa_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_qa_bug_evidence_user" model="ir.rule">
+        <field name="name">QA Bug Evidence: User sees assigned bug evidence</field>
+        <field name="model_id" ref="model_qa_bug_evidence"/>
+        <field name="domain_force">[('ticket_id.assignee_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('group_qa_user'))]"/>
         <field name="perm_read" eval="True"/>
         <field name="perm_write" eval="True"/>
