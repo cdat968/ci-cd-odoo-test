@@ -96,10 +96,17 @@ class QaBugTicket(models.Model):
     reporter = fields.Char(string='Reporter', default='ci-bot')
     resolved_at = fields.Datetime(string='Resolved At', readonly=True)
 
-    @api.depends('evidence_ids.url', 'evidence_ids.caption', 'evidence_ids.kind')
+    @api.depends(
+        'evidence_ids.url',
+        'evidence_ids.attachment_id',
+        'evidence_ids.caption',
+        'evidence_ids.kind',
+    )
     def _compute_evidence_gallery_html(self):
         for rec in self:
-            shots = rec.evidence_ids.filtered(lambda e: e.kind == 'screenshot' and e.url)
+            shots = rec.evidence_ids.filtered(
+                lambda e: e.kind == 'screenshot' and (e.url or e.attachment_id)
+            )
             if not shots:
                 rec.evidence_gallery_html = Markup(
                     '<p class="text-muted fst-italic">No evidence images attached.</p>'
@@ -107,7 +114,8 @@ class QaBugTicket(models.Model):
                 continue
             cards = []
             for ev in shots:
-                url     = (ev.url     or '').replace('"', '%22')
+                source_url = ev.url or f'/web/image/ir.attachment/{ev.attachment_id.id}/datas'
+                url     = (source_url or '').replace('"', '%22')
                 caption = (ev.caption or '').replace('<', '&lt;').replace('>', '&gt;')
                 cards.append(Markup(
                     f'<div class="qa-evidence-card">'

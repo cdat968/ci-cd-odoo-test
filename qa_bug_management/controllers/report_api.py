@@ -13,7 +13,12 @@ def _ci_auth():
 def _serialize_bug(ticket):
     steps_raw = ticket.steps or ''
     steps = [s.strip() for s in steps_raw.split('\n') if s.strip()]
-    evidence = [{'src': e.url, 'title': e.caption or ''} for e in ticket.evidence_ids]
+    evidence = []
+    for item in ticket.evidence_ids:
+        src = item.url
+        if not src and item.attachment_id:
+            src = f'/web/image/ir.attachment/{item.attachment_id.id}/datas'
+        evidence.append({'src': src or '', 'title': item.caption or ''})
     return {
         'id': ticket.component_a_bug_id or str(ticket.id),
         'summary': ticket.title or '',

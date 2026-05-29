@@ -81,6 +81,7 @@
                                 <list editable="bottom">
                                     <field name="kind"/>
                                     <field name="url" widget="url"/>
+                                    <field name="attachment_id"/>
                                     <field name="caption"/>
                                 </list>
                             </field>

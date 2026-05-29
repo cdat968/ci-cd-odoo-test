@@ -26,6 +26,9 @@ so the QA Lead can triage it from the same UI used for manual bugs.
 - The bridge also lets a QA Manager create one linked `project.task` from a QA
   bug. Project forms expose a Bugs smart button and a Bugs tab when the project
   has QA bugs.
+- Helpdesk image attachments are linked into QA Bug evidence as
+  attachment-backed screenshots. Existing Cloudinary URL evidence remains
+  supported.
 
 ## Module layout
 

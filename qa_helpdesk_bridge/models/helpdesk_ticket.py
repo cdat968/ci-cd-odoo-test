@@ -27,8 +27,21 @@ class HelpdeskTicket(models.Model):
                 'helpdesk_ticket_id': self.id,
                 'project_id': self.project_id.id,
             })
+            self._create_qa_bug_evidence_from_attachments(bug)
             self.sudo().qa_bug_id = bug.id
         return self.action_open_qa_bug()
+
+    def _create_qa_bug_evidence_from_attachments(self, bug):
+        image_attachments = self.attachment_ids.filtered(
+            lambda attachment: (attachment.mimetype or '').startswith('image/')
+        )
+        for attachment in image_attachments:
+            self.env['qa.bug.evidence'].sudo().create({
+                'ticket_id': bug.id,
+                'kind': 'screenshot',
+                'attachment_id': attachment.id,
+                'caption': attachment.name or self.name,
+            })
 
     def action_open_qa_bug(self):
         self.ensure_one()

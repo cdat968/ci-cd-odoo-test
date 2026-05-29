@@ -11,6 +11,11 @@ class QaBugEvidence(models.Model):
         ('log', 'Log'),
         ('link', 'Link'),
     ], required=True, default='screenshot')
-    url = fields.Char(string='URL', required=True)
+    url = fields.Char(string='URL')
+    attachment_id = fields.Many2one(
+        'ir.attachment',
+        string='Attachment',
+        ondelete='set null',
+    )
     caption = fields.Char(string='Caption')
     cloudinary_public_id = fields.Char(string='Cloudinary ID')

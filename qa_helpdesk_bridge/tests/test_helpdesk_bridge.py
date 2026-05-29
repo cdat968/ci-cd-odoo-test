@@ -1,3 +1,5 @@
+import base64
+
 from odoo.tests import tagged
 from odoo.tests import new_test_user
 from odoo.tests.common import TransactionCase
@@ -61,6 +63,34 @@ class TestHelpdeskBridge(TransactionCase):
         self.assertEqual(ticket.qa_bug_id.source, 'manual')
         self.assertEqual(ticket.qa_bug_id.project_id, self.project)
         self.assertEqual(action['res_id'], ticket.qa_bug_id.id)
+
+    def test_create_qa_bug_links_helpdesk_image_attachments_as_evidence(self):
+        ticket = self._create_helpdesk_ticket()
+        image_attachment = self.env['ir.attachment'].sudo().create({
+            'name': 'customer-screenshot.png',
+            'datas': base64.b64encode(b'fake image bytes'),
+            'mimetype': 'image/png',
+            'res_model': 'helpdesk.ticket',
+            'res_id': ticket.id,
+        })
+        self.env['ir.attachment'].sudo().create({
+            'name': 'customer-log.txt',
+            'datas': base64.b64encode(b'not an image'),
+            'mimetype': 'text/plain',
+            'res_model': 'helpdesk.ticket',
+            'res_id': ticket.id,
+        })
+
+        ticket.action_create_qa_bug()
+
+        evidence = ticket.qa_bug_id.evidence_ids
+        self.assertEqual(len(evidence), 1)
+        self.assertEqual(evidence.attachment_id, image_attachment)
+        self.assertFalse(evidence.url)
+        self.assertIn(
+            f'/web/image/ir.attachment/{image_attachment.id}/datas',
+            ticket.qa_bug_id.evidence_gallery_html,
+        )
 
     def test_create_qa_bug_is_idempotent(self):
         ticket = self._create_helpdesk_ticket()
