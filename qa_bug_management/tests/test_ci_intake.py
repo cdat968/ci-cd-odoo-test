@@ -28,6 +28,38 @@ class TestCiIntake(HttpCase):
             result = resp.json()
             self.assertIn('QA-BUG/', result.get('name', ''))
 
+    def test_assigns_ticket_from_github_login(self):
+        import os
+        import json
+        user = self.env['res.users'].sudo().create({
+            'name': 'CI Dev',
+            'login': 'ci-dev@example.com',
+            'github_login': 'ci-dev',
+            'groups_id': [(6, 0, [
+                self.env.ref('base.group_user').id,
+                self.env.ref('qa_bug_management.group_qa_user').id,
+            ])],
+        })
+        with patch.dict(os.environ, {'QA_CI_KEY': 'test-key'}):
+            payload = json.dumps({
+                'title': 'Mapped GitHub user failure',
+                'ci_commit_sha': 'mapped123',
+                'ci_branch': 'feature/mapped',
+                'github_actor': 'fallback-user',
+                'github_pr_author': 'ci-dev',
+                'github_pr_url': 'https://github.com/acme/repo/pull/12',
+                'evidence': [],
+            }).encode()
+            resp = self.url_open('/qa/ci/bug', data=payload,
+                                 headers={'Content-Type': 'application/json',
+                                          'X-CI-Key': 'test-key'})
+            self.assertEqual(resp.status_code, 200)
+            ticket = self.env['qa.bug.ticket'].sudo().browse(resp.json()['id'])
+            self.assertEqual(ticket.assignee_id, user)
+            self.assertEqual(ticket.ci_github_actor, 'fallback-user')
+            self.assertEqual(ticket.ci_pr_author, 'ci-dev')
+            self.assertEqual(ticket.ci_pr_url, 'https://github.com/acme/repo/pull/12')
+
     def test_dedup_same_commit_title(self):
         import os
         import json

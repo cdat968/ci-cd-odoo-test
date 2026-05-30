@@ -83,6 +83,9 @@ class QaBugTicket(models.Model):
     ci_run_url = fields.Char(string='CI Run URL')
     ci_commit_sha = fields.Char(string='Commit SHA')
     ci_branch = fields.Char(string='Branch')
+    ci_github_actor = fields.Char(string='GitHub Actor')
+    ci_pr_author = fields.Char(string='PR Author')
+    ci_pr_url = fields.Char(string='PR URL')
     report_share_url = fields.Char(string='Report URL')
     component_a_bug_id = fields.Char(string='Report Bug ID')
 

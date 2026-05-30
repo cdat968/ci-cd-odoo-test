@@ -42,6 +42,9 @@
                         <group string="Traceability">
                             <field name="ci_branch"/>
                             <field name="ci_commit_sha"/>
+                            <field name="ci_github_actor"/>
+                            <field name="ci_pr_author"/>
+                            <field name="ci_pr_url"/>
                             <field name="component_a_bug_id"/>
                         </group>
                     </group>

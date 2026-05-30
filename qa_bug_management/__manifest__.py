@@ -13,6 +13,7 @@
         'views/qa_field_option_views.xml',
         'views/qa_report_views.xml',
         'views/qa_evidence_upload_wizard_views.xml',
+        'views/res_users_views.xml',
         'views/qa_bug_ticket_menu.xml',
     ],
     'assets': {

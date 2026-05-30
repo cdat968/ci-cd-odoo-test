@@ -29,7 +29,8 @@ class HelpdeskTicket(models.Model):
                 'assignee_id': self.user_id.id,
             })
             self._create_qa_bug_evidence_from_attachments(bug)
-            bug.with_user(self.env.user)._auto_create_or_sync_project_task()
+            if self.env.user.has_group('qa_bug_management.group_qa_manager'):
+                bug.with_user(self.env.user)._auto_create_or_sync_project_task()
             self.sudo().qa_bug_id = bug.id
         return self.action_open_qa_bug()
 
