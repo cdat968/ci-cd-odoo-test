@@ -11,3 +11,7 @@ __pycache__/
 .DS_Store
 .vercel
 .env*
+.worktale/
+.specstory/
+dat_test_commit.json
+today*.json
