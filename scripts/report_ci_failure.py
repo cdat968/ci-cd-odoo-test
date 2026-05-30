@@ -44,6 +44,7 @@ def main():
         payload = {
             'title': f"[CI] {failure['module']}.{failure['test']} failed",
             'description': '\n'.join(metadata),
+            'ci_failure_step': failure.get('step', ''),
             'ci_error_log': f"<pre>{html.escape(failure.get('traceback', ''))}</pre>",
             'severity': 'high',
             'ci_run_url': args.run_url,

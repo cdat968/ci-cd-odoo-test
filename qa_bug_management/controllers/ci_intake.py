@@ -109,6 +109,8 @@ class CiIntakeController(http.Controller):
             if assignee and not ticket.assignee_id:
                 ticket.write({
                     'assignee_id': assignee.id,
+                    'ci_failure_step': data.get('ci_failure_step', ''),
+                    'ci_error_log': data.get('ci_error_log', ''),
                     'ci_github_actor': data.get('github_actor', ''),
                     'ci_pr_author': data.get('github_pr_author', ''),
                     'ci_pr_url': data.get('github_pr_url', ''),
@@ -121,6 +123,8 @@ class CiIntakeController(http.Controller):
                 'description': data.get('description', ''),
                 'severity': _normalize_severity(data.get('severity', '')),
                 'source': 'ci',
+                'ci_failure_step': data.get('ci_failure_step', ''),
+                'ci_error_log': data.get('ci_error_log', ''),
                 'ci_run_url': data.get('ci_run_url', ''),
                 'ci_commit_sha': commit_sha,
                 'ci_branch': data.get('ci_branch', ''),
@@ -202,6 +206,8 @@ class CiIntakeController(http.Controller):
                 'suggested_fix': bug.get('suggestedFix', ''),
                 'component_a_bug_id': bug.get('id', ''),
                 'source': 'ci',
+                'ci_failure_step': data.get('ci_failure_step', ''),
+                'ci_error_log': data.get('ci_error_log', ''),
                 'ci_run_url': data.get('ci_run_url', ''),
                 'ci_commit_sha': data.get('ci_commit_sha', ''),
                 'ci_branch': data.get('ci_branch', ''),

@@ -60,6 +60,27 @@ class TestCiIntake(HttpCase):
             self.assertEqual(ticket.ci_pr_author, 'ci-dev')
             self.assertEqual(ticket.ci_pr_url, 'https://github.com/acme/repo/pull/12')
 
+    def test_stores_ci_failure_step_and_preformatted_log(self):
+        import os
+        import json
+        with patch.dict(os.environ, {'QA_CI_KEY': 'test-key'}):
+            payload = json.dumps({
+                'title': 'Bridge test failed',
+                'ci_commit_sha': 'prelog123',
+                'ci_branch': 'feature/prelog',
+                'ci_failure_step': 'QA Helpdesk bridge tests',
+                'ci_error_log': '<pre>Traceback\n  line 1\nAccessError</pre>',
+                'evidence': [],
+            }).encode()
+            resp = self.url_open('/qa/ci/bug', data=payload,
+                                 headers={'Content-Type': 'application/json',
+                                          'X-CI-Key': 'test-key'})
+            self.assertEqual(resp.status_code, 200)
+            ticket = self.env['qa.bug.ticket'].sudo().browse(resp.json()['id'])
+            self.assertEqual(ticket.ci_failure_step, 'QA Helpdesk bridge tests')
+            self.assertIn('<pre>', ticket.ci_error_log)
+            self.assertIn('AccessError', ticket.ci_error_log)
+
     def test_dedup_same_commit_title(self):
         import os
         import json

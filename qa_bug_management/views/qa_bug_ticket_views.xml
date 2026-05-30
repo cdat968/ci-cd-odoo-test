@@ -90,6 +90,9 @@
                             </field>
                         </page>
                         <page string="CI Info" name="ci_info">
+                            <group>
+                                <field name="ci_failure_step" readonly="1"/>
+                            </group>
                             <field name="ci_error_log" widget="html" readonly="1"/>
                             <group>
                                 <field name="ci_run_url" widget="url"/>
