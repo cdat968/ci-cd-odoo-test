@@ -91,9 +91,11 @@
                         </page>
                         <page string="CI Info" name="ci_info">
                             <group>
-                                <field name="ci_failure_step" readonly="1"/>
+                                <field name="ci_failure_step" readonly="1"
+                                       invisible="not ci_failure_step"/>
                             </group>
-                            <field name="ci_error_log" widget="html" readonly="1"/>
+                            <field name="ci_error_log" widget="html" readonly="1"
+                                   invisible="not ci_error_log"/>
                             <group>
                                 <field name="ci_run_url" widget="url"/>
                                 <field name="report_share_url" widget="url"/>
