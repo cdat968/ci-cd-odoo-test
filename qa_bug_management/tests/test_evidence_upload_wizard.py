@@ -5,6 +5,11 @@ from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
 
+PNG_1X1 = base64.b64decode(
+    b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='
+)
+
+
 @tagged('post_install', '-at_install')
 class TestQaEvidenceUploadWizard(TransactionCase):
 
@@ -27,7 +32,7 @@ class TestQaEvidenceUploadWizard(TransactionCase):
         ticket = self.env['qa.bug.ticket'].create({'title': 'Accept image'})
         attachment = self.env['ir.attachment'].create({
             'name': 'screenshot.png',
-            'datas': base64.b64encode(b'\x89PNG\r\n\x1a\nfake-png'),
+            'datas': base64.b64encode(PNG_1X1),
             'mimetype': 'image/png',
         })
         wizard = self.env['qa.evidence.upload.wizard'].create({
