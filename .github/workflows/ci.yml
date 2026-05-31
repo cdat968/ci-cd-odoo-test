@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: [main, '18.0']
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   test-odoo:
@@ -32,21 +36,54 @@ jobs:
         run: |
           python scripts/verify_oca_helpdesk_vendor.py
 
+      - name: Init CI test logs
+        run: |
+          mkdir -p /tmp/ci-logs /tmp/ci-exit
+          : > /tmp/ci_odoo_tests.log
+
       - name: Run OCA Helpdesk smoke tests
         run: |
           set -o pipefail
           START_TS=$(date +%s)
+          set +e
           bash scripts/run_oca_helpdesk_smoke_tests.sh 2>&1 | tee /tmp/oca_helpdesk_smoke.log
+          TEST_EXIT=${PIPESTATUS[0]}
+          set -e
           END_TS=$(date +%s)
           echo "OCA Helpdesk smoke tests step took $((END_TS - START_TS))s"
+          if [ "$TEST_EXIT" -ne 0 ]; then
+            echo "=== docker compose logs: odoo_helpdesk_smoke ===" >> /tmp/oca_helpdesk_smoke.log
+            docker compose -f docker-compose.test.yml logs odoo_helpdesk_smoke >> /tmp/oca_helpdesk_smoke.log 2>&1 || true
+          fi
+          cp /tmp/oca_helpdesk_smoke.log /tmp/ci-logs/oca_helpdesk_smoke.log
+          echo "$TEST_EXIT" > /tmp/ci-exit/oca_helpdesk_smoke.exit
+          {
+            echo "===== OCA Helpdesk smoke tests ====="
+            cat /tmp/oca_helpdesk_smoke.log
+          } >> /tmp/ci_odoo_tests.log
+          exit 0
 
       - name: Run QA Helpdesk bridge tests
         run: |
           set -o pipefail
           START_TS=$(date +%s)
+          set +e
           bash scripts/run_qa_helpdesk_bridge_tests.sh 2>&1 | tee /tmp/qa_helpdesk_bridge.log
+          TEST_EXIT=${PIPESTATUS[0]}
+          set -e
           END_TS=$(date +%s)
           echo "QA Helpdesk bridge tests step took $((END_TS - START_TS))s"
+          if [ "$TEST_EXIT" -ne 0 ]; then
+            echo "=== docker compose logs: odoo_helpdesk_bridge ===" >> /tmp/qa_helpdesk_bridge.log
+            docker compose -f docker-compose.test.yml logs odoo_helpdesk_bridge >> /tmp/qa_helpdesk_bridge.log 2>&1 || true
+          fi
+          cp /tmp/qa_helpdesk_bridge.log /tmp/ci-logs/qa_helpdesk_bridge.log
+          echo "$TEST_EXIT" > /tmp/ci-exit/qa_helpdesk_bridge.exit
+          {
+            echo "===== QA Helpdesk bridge tests ====="
+            cat /tmp/qa_helpdesk_bridge.log
+          } >> /tmp/ci_odoo_tests.log
+          exit 0
 
       - name: Run Odoo tests
         run: |
@@ -58,21 +95,36 @@ jobs:
           set -e
           END_TS=$(date +%s)
           echo "Run Odoo tests step took $((END_TS - START_TS))s"
-          exit "$TEST_EXIT"
-        continue-on-error: true
-        id: odoo_test
+          if [ "$TEST_EXIT" -ne 0 ]; then
+            echo "=== docker compose logs: odoo ===" >> /tmp/odoo_test.log
+            docker compose -f docker-compose.test.yml logs odoo >> /tmp/odoo_test.log 2>&1 || true
+          fi
+          cp /tmp/odoo_test.log /tmp/ci-logs/odoo_test.log
+          echo "$TEST_EXIT" > /tmp/ci-exit/odoo_test.exit
+          {
+            echo "===== Odoo module tests ====="
+            cat /tmp/odoo_test.log
+          } >> /tmp/ci_odoo_tests.log
+          exit 0
 
-      - name: Parse test results
+      - name: Collect test failures
         if: always()
+        id: collect_failures
         run: |
-          echo "=== LAST 50 LINES OF ODOO LOG ==="
-          tail -50 /tmp/odoo_test.log || true
+          echo "=== LAST 120 LINES OF COMBINED ODOO TEST LOG ==="
+          tail -120 /tmp/ci_odoo_tests.log || true
+          python scripts/collect_ci_failures.py \
+            --step "OCA Helpdesk smoke tests::/tmp/ci-logs/oca_helpdesk_smoke.log::/tmp/ci-exit/oca_helpdesk_smoke.exit" \
+            --step "QA Helpdesk bridge tests::/tmp/ci-logs/qa_helpdesk_bridge.log::/tmp/ci-exit/qa_helpdesk_bridge.exit" \
+            --step "Odoo module tests::/tmp/ci-logs/odoo_test.log::/tmp/ci-exit/odoo_test.exit" \
+            > /tmp/failures.json
+          FAILED=$(python -c "import json; print('true' if json.load(open('/tmp/failures.json')).get('failed', 0) else 'false')")
+          echo "failed=${FAILED}" >> "$GITHUB_OUTPUT"
           echo "=== PARSE RESULT ==="
-          cat /tmp/odoo_test.log | python scripts/parse_odoo_test_log.py > /tmp/failures.json || true
           cat /tmp/failures.json
 
       - name: Upload report to Odoo
-        if: steps.odoo_test.outcome == 'failure'
+        if: always() && steps.collect_failures.outputs.failed == 'true'
         continue-on-error: true
         id: upload_report
         env:
@@ -82,6 +134,9 @@ jobs:
           CI_COMMIT_SHA: ${{ github.sha }}
           CI_BRANCH: ${{ github.ref_name }}
           CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_PR_AUTHOR: ${{ github.event.pull_request.user.login || '' }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url || '' }}
         run: |
           pip install requests cloudinary
           SHARE_URL=$(python scripts/upload_report.py \
@@ -92,10 +147,13 @@ jobs:
           echo "SHARE_URL=${SHARE_URL}" >> $GITHUB_ENV
 
       - name: Report failures to Odoo
-        if: steps.odoo_test.outcome == 'failure'
+        if: always() && steps.collect_failures.outputs.failed == 'true'
         env:
           ODOO_URL: ${{ secrets.ODOO_URL }}
           QA_CI_KEY: ${{ secrets.QA_CI_KEY }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_PR_AUTHOR: ${{ github.event.pull_request.user.login || '' }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url || '' }}
         run: |
           pip install requests
           python scripts/report_ci_failure.py \
@@ -103,10 +161,49 @@ jobs:
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --commit "${{ github.sha }}" \
             --branch "${{ github.ref_name }}" \
-            --report-url "${SHARE_URL:-}"
+            --report-url "${SHARE_URL:-}" \
+            --github-actor "${GITHUB_ACTOR}" \
+            --github-pr-author "${GITHUB_PR_AUTHOR}" \
+            --github-pr-url "${GITHUB_PR_URL}" \
+            --created-output /tmp/created_ci_bugs.txt
+
+      - name: Comment on failed PR
+        if: always() && steps.collect_failures.outputs.failed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          SHARE_URL: ${{ env.SHARE_URL }}
+        with:
+          script: |
+            const fs = require('fs');
+            const failures = JSON.parse(fs.readFileSync('/tmp/failures.json', 'utf8'));
+            let created = '';
+            try {
+              created = fs.readFileSync('/tmp/created_ci_bugs.txt', 'utf8').trim();
+            } catch (e) {}
+            const actor = context.payload.pull_request.user.login || context.actor;
+            const reportUrl = process.env.SHARE_URL || '';
+            const failureLines = (failures.failures || [])
+              .slice(0, 5)
+              .map((failure) => `- ${failure.step || 'CI'}: ${failure.module}.${failure.test}`)
+              .join('\n');
+            const body = [
+              `@${actor} CI failed for this pull request.`,
+              '',
+              failureLines || '- CI failed, but no structured failures were parsed.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              reportUrl ? `Report: ${reportUrl}` : '',
+              created ? `Odoo bugs:\n\`\`\`\n${created}\n\`\`\`` : '',
+            ].filter(Boolean).join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
 
       - name: Fail job if tests failed
-        if: steps.odoo_test.outcome == 'failure'
+        if: always() && steps.collect_failures.outputs.failed == 'true'
         run: exit 1
 
   test-webapp:

@@ -61,6 +61,22 @@ def _normalize_status(val: str) -> str:
     return mapping.get((val or '').lower(), 'new')
 
 
+def _find_github_assignee(data: dict):
+    github_login = (
+        data.get('github_pr_author')
+        or data.get('github_actor')
+        or data.get('github_login')
+        or ''
+    ).strip()
+    if not github_login:
+        return request.env['res.users']
+    return request.env['res.users'].sudo().search([
+        ('github_login', '=ilike', github_login),
+        ('active', '=', True),
+        ('share', '=', False),
+    ], limit=1)
+
+
 class CiIntakeController(http.Controller):
 
     # ── Legacy single-bug endpoint (backward compat) ───────────────────────
@@ -89,19 +105,36 @@ class CiIntakeController(http.Controller):
 
         if existing:
             ticket = existing
+            assignee = _find_github_assignee(data)
+            if assignee and not ticket.assignee_id:
+                ticket.write({
+                    'assignee_id': assignee.id,
+                    'ci_failure_step': data.get('ci_failure_step', ''),
+                    'ci_error_log': data.get('ci_error_log', ''),
+                    'ci_github_actor': data.get('github_actor', ''),
+                    'ci_pr_author': data.get('github_pr_author', ''),
+                    'ci_pr_url': data.get('github_pr_url', ''),
+                })
         else:
             evidence_data = data.get('evidence', [])
+            assignee = _find_github_assignee(data)
             ticket = BugTicket.create({
                 'title': title,
                 'description': data.get('description', ''),
                 'severity': _normalize_severity(data.get('severity', '')),
                 'source': 'ci',
+                'ci_failure_step': data.get('ci_failure_step', ''),
+                'ci_error_log': data.get('ci_error_log', ''),
                 'ci_run_url': data.get('ci_run_url', ''),
                 'ci_commit_sha': commit_sha,
                 'ci_branch': data.get('ci_branch', ''),
+                'ci_github_actor': data.get('github_actor', ''),
+                'ci_pr_author': data.get('github_pr_author', ''),
+                'ci_pr_url': data.get('github_pr_url', ''),
                 'report_share_url': data.get('report_share_url', ''),
                 'component_a_bug_id': data.get('component_a_bug_id', ''),
                 'reporter': data.get('reporter', 'ci-bot'),
+                'assignee_id': assignee.id if assignee else False,
                 'evidence_ids': [(0, 0, {
                     'kind': e.get('kind', 'link'),
                     'url': e.get('url', ''),
@@ -148,6 +181,7 @@ class CiIntakeController(http.Controller):
         # Create qa.bug.ticket records linked to this report
         BugTicket = request.env['qa.bug.ticket'].sudo()
         Evidence = request.env['qa.bug.evidence'].sudo()
+        assignee = _find_github_assignee(data)
 
         for bug in bugs:
             steps_raw = bug.get('steps', [])
@@ -172,11 +206,17 @@ class CiIntakeController(http.Controller):
                 'suggested_fix': bug.get('suggestedFix', ''),
                 'component_a_bug_id': bug.get('id', ''),
                 'source': 'ci',
+                'ci_failure_step': data.get('ci_failure_step', ''),
+                'ci_error_log': data.get('ci_error_log', ''),
                 'ci_run_url': data.get('ci_run_url', ''),
                 'ci_commit_sha': data.get('ci_commit_sha', ''),
                 'ci_branch': data.get('ci_branch', ''),
+                'ci_github_actor': data.get('github_actor', ''),
+                'ci_pr_author': data.get('github_pr_author', ''),
+                'ci_pr_url': data.get('github_pr_url', ''),
                 'reporter': data.get('reporter', 'ci-bot'),
                 'report_share_url': share_url,
+                'assignee_id': assignee.id if assignee else False,
             })
 
             for ev in (bug.get('evidence') or []):
